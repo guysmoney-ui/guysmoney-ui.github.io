@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Jimmi's Design Shop</title><meta name="theme-color" content="#0b0618">
+<link rel="icon" href="icons/jimmi-round.ico"><script>if(location.protocol.startsWith("http"))document.write('<link rel="manifest" href="manifest.webmanifest">')</script><link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css"></head>
+<body>
+<header class="facade">
+ <div class="awning"></div>
+ <div class="signrow">
+  <h1 class="neon">Jimmi's Design Shop</h1>
+  <div class="tools">
+   <button id="bOpen" title="Open design (Ctrl+O)">📂<span> Open</span></button>
+   <button id="bUndo" title="Undo (Ctrl+Z)">↶</button><button id="bRedo" title="Redo (Ctrl+Y)">↷</button>
+   <button id="bLink" title="Copy share link (Ctrl+Shift+C)">🔗<span> Link</span></button>
+   <button id="bSend" class="hot" title="Send to JimmiBot (Ctrl+S)">🚀<span> Send to JimmiBot</span></button>
+   <button id="bMusic" title="Music (M)">🔇</button><button id="bHelp" title="Shortcuts (?)">?</button>
+  </div>
+ </div>
+ <div class="tubes"></div>
+ <input type="file" id="file" accept=".json,application/json" hidden>
+</header>
+<audio id="bgm" src="audio/jimmy-soft.mp3" loop preload="none" playsinline></audio>
+<main class="shop">
+ <aside class="rack left">
+  <section data-tab="garment"><h4>Garments rack</h4><div class="row" id="g"></div>
+   <h4>View</h4><div class="row" id="view"></div>
+   <h4>Start from an idea</h4><div class="starters" id="starters"></div><button id="surprise" class="wide">🎲 Surprise me</button></section>
+  <section data-tab="inbox"><h4>📥 JimmiBot Inbox</h4><div id="inbox" class="inbox"></div><p class="hint">Or drop a .jimmi.json anywhere on the window.</p></section>
+ </aside>
+ <section class="stage"><div class="spot"></div><canvas id="cv" width="1200" height="1600"></canvas>
+  <p class="cap" id="cap"></p></section>
+ <aside class="rack right">
+  <section data-tab="colors"><h4>Base color</h4><div class="row" id="base"></div>
+   <h4>Logo color</h4><div class="row" id="logoc"></div><h4>Hair color</h4><div class="row" id="hairc"></div>
+   <h4>Side stripe</h4><div class="row" id="st"></div><label class="sl">Stripe width <input type="range" id="sw" min="2" max="14" step="1"></label></section>
+  <section data-tab="place"><h4>Selected: <span id="selName"></span></h4><div class="row" id="selRow"></div>
+   <h4>Logo placement</h4><div class="row" id="lp"></div>
+   <h4>Wordmark placement</h4><div class="row" id="wp"></div>
+   <label class="sl">Logo size <input type="range" id="ls" min="0.2" max="2" step="0.01"></label>
+   <label class="sl">Wordmark size <input type="range" id="ws" min="0.2" max="2" step="0.01"></label>
+   <label class="sl">Wordmark angle <input type="range" id="wr" min="-180" max="180" step="1"></label>
+   <p class="hint">Drag the logo or wordmark on the garment. Pinch or scroll-wheel to resize.</p>
+   <h4>Design</h4><label class="fld">Name <input id="nm" maxlength="60"></label><label class="fld">Notes for JimmiBot <textarea id="nt" rows="3"></textarea></label>
+   <p class="spec" id="spec"></p></section>
+ </aside>
+</main>
+<nav class="tabbar" id="tabbar"><button data-t="garment" class="on">👕<span>Garment</span></button><button data-t="colors">🎨<span>Colors</span></button><button data-t="place">📍<span>Placement</span></button><button data-t="inbox">📥<span>Inbox</span></button></nav>
+<div class="modal" id="modal" hidden><div class="box"><div id="mBody"></div><button id="mClose" class="hot">Got it</button></div></div>
+<div class="drop" id="drop" hidden>Drop the .jimmi.json to load it</div>
+<div class="toast" id="toast"></div>
+<script src="assets.js"></script><script src="inbox/inbox.js"></script><script src="render.js"></script><script src="app.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{scope:"./"}));</script>
+</body></html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jimmi Mall — Design Studio</title><meta name="theme-color" content="#0b0618">
+<link rel="icon" href="jimmi-round.ico"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="studio.css"></head>
+<body class="mall">
+<div class="door" id="door"><button id="doorBtn" type="button">🚪 Walk into the Jimmi Mall<small>Tap to step in — the in-store jam starts</small></button></div>
+<header class="mtop"><a class="home" href="index.html">◀ Jimmi</a>
+<nav><a href="#concourse" data-v="concourse">Concourse</a><a href="#mens" data-v="mens">Men's</a><a href="#womens" data-v="womens">Women's</a><a href="#studio" data-v="studio">Studio</a></nav>
+<button id="mute" type="button" aria-label="Mute music">🔊</button></header>
+<audio id="bgm" src="audio/jimmy-soft.mp3" loop preload="none" playsinline></audio>
+<div id="walker" aria-hidden="true"></div>
+<main class="floor">
+<section class="view" id="v-concourse">
+ <h1 class="sign">Jimmi Mall</h1><p class="sub">Level 1 · Est. 1986 · pick a store</p>
+ <div class="fronts">
+  <a class="front" href="#mens" style="--c:#22e6ff"><div class="awn"></div><h3>MEN'S SHOP</h3><div class="win" data-win="mens"></div><p>Tees, long sleeves, hoodies & tracksuits</p></a>
+  <a class="front" href="#womens" style="--c:#ff2bd6"><div class="awn"></div><h3>WOMEN'S SHOP</h3><div class="win" data-win="womens"></div><p>Leggings, crops, zips & sets</p></a>
+  <a class="front" href="#studio" style="--c:#ffe14a"><div class="awn"></div><h3>DESIGN STUDIO</h3><div class="win"><img src="assets/studio/logo-body.png" alt="" style="filter:drop-shadow(0 0 6px #ffe14a)"></div><p>Make your own Jimmi piece</p></a>
+ </div>
+</section>
+<section class="view terrazzo" id="v-mens"><h1 class="sign" style="text-shadow:0 0 8px #22e6ff,0 0 24px #22e6ff">Men's Shop</h1><p class="sub">Preview · buy on Etsy when live</p><div class="grid2" data-grid="mens"></div></section>
+<section class="view terrazzo" id="v-womens"><h1 class="sign">Women's Shop</h1><p class="sub">Preview · buy on Etsy when live</p><div class="grid2" data-grid="womens"></div></section>
+<section class="view" id="v-studio">
+ <h1 class="sign" style="text-shadow:0 0 8px #ffe14a,0 0 24px #ffe14a">Design Studio</h1><p class="sub">Build your own Jimmi · preview only</p>
+ <div class="studio">
+  <div class="stage"><canvas id="cv" width="600" height="800"></canvas><p class="cap" id="cap"></p></div>
+  <div class="panel">
+   <h4>Start from an idea</h4><div class="starters" id="starters"></div>
+   <h4>1 · Garment</h4><div class="row" id="g"></div>
+   <h4>2 · Base color</h4><div class="row" id="base"></div>
+   <h4>3 · Logo color</h4><div class="row" id="logoc"></div>
+   <h4>Hair color</h4><div class="row" id="hairc"></div>
+   <h4>Logo placement</h4><div class="row" id="lp"></div>
+   <h4>Wordmark placement</h4><div class="row" id="wp"></div>
+   <h4>Side stripe</h4><div class="row" id="st"></div>
+   <div class="cta"><button class="btn2 b-sur" id="surprise" type="button">🎲 Surprise me</button><a class="btn2 b-req" id="req" href="#">✉ Request this design</a></div>
+   <p class="spec" id="spec"></p>
+  </div>
+ </div>
+</section>
+</main>
+<script src="products.js"></script><script src="studio.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http")){addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));}</script>
+</body></html>

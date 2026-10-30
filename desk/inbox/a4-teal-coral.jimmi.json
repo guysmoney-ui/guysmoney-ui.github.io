@@ -1,0 +1,34 @@
+{
+  "schema": "jimmi.design",
+  "version": 1,
+  "name": "A4 Teal & Coral",
+  "notes": "Logo on the thigh at half size; wordmark on the lower leg unchanged.",
+  "author": "JimmiBot",
+  "created": "2026-10-30T08:50:00-06:00",
+  "updated": "2026-10-30T08:50:00-06:00",
+  "garment": "leggings",
+  "view": "front",
+  "colors": {
+    "base": "#0f8f8c",
+    "logo": "#ff6f61",
+    "hair": "#ff6f61",
+    "stripe": null,
+    "stripeWidth": 7
+  },
+  "logo": {
+    "placement": "thigh",
+    "side": "front",
+    "x": 230,
+    "y": 345,
+    "scale": 0.567
+  },
+  "wordmark": {
+    "placement": "custom",
+    "side": "front",
+    "x": 372,
+    "y": 600,
+    "scale": 0.6,
+    "rotation": -84.6,
+    "hidden": false
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "jimmi.design",
+  "version": 1,
+  "name": "A1 Navy & Yellow",
+  "notes": "Full-length, wordmark down the leg, logo on the calf.",
+  "author": "JimmiBot",
+  "created": "2026-10-30T08:50:00-06:00",
+  "updated": "2026-10-30T08:50:00-06:00",
+  "garment": "leggings",
+  "view": "front",
+  "colors": {
+    "base": "#14204a",
+    "logo": "#ffd400",
+    "hair": "#ffd400",
+    "stripe": null,
+    "stripeWidth": 7
+  },
+  "logo": {
+    "placement": "calf",
+    "side": "front",
+    "x": 240,
+    "y": 585,
+    "scale": 1.0
+  },
+  "wordmark": {
+    "placement": "down the leg",
+    "side": "front",
+    "x": 372,
+    "y": 440,
+    "scale": 1.0,
+    "rotation": -84.6,
+    "hidden": false
+  }
+}
