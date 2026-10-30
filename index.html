@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jimmi at the Gym — got your jimmies on?</title>
+  <meta name="description" content="Jimmi at the Gym. Neon gym gear. Play the jam, shop the lookbook, buy on Etsy." />
+  <link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="jimmi-round.ico">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#07070a">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+</head>
+<body>
+
+  <div id="enter-gate" class="enter-gate" hidden>
+    <div class="enter-card">
+      <img src="assets/logos/02-logo-buff.png" alt="" class="enter-logo" />
+      <p class="slogan">got your jimmies on?</p>
+      <h1>Walk into the store</h1>
+      <p>Tap to step onto the floor. The Jimmi jam starts with you.</p>
+      <button type="button" id="enter-btn" class="btn btn-primary">Enter Jimmi at the Gym</button>
+    </div>
+  </div>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top">
+        <img src="assets/logos/02-logo-buff.png" alt="Buff Jimmi logo" />
+        <span>Jimmi at the Gym</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#play">Play</a>
+        <a href="#shop">Shop</a>
+        <a href="#about">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div class="hero-logos">
+        <img src="assets/logos/01-logo-skinny.png" alt="Skinny Jimmi neon logo" />
+        <img src="assets/logos/02-logo-buff.png" alt="Buff Jimmi neon logo" />
+      </div>
+      <p class="slogan">got your jimmies on?</p>
+      <h1>Jimmi at the Gym</h1>
+      <p>Skinny Jimmi starts. Buff Jimmi finishes. Neon outline, spiky hair, no face — just the work. Gear you can actually wear to the gym.</p>
+      <a class="btn btn-primary" href="#shop">Shop the floor</a>
+    </section>
+
+    <section id="play" class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="badge">Official jam</div>
+          <h2>Jimmy at the Gym (Remastered)</h2>
+          <p>Made for the brand by BRØCK. The floor soundtrack — starts when you walk in.</p>
+        </div>
+      </div>
+      <div class="player">
+        <img src="assets/cover.jpg" alt="Album cover for Jimmy at the Gym Remastered" />
+        <div>
+          <h3>Jimmy at the Gym (Remastered)</h3>
+          <p class="by">by BRØCK · ~3:25</p>
+          <audio id="jimmi-audio" controls preload="auto" loop playsinline>
+            <source src="audio/jimmy-at-the-gym.mp3" type="audio/mpeg" />
+            Your browser does not support audio.
+          </audio>
+          <p class="player-note" id="audio-note">In-store soundtrack on loop at mid volume. Purchases still happen on Etsy.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="shop" class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="badge">Lookbook</div>
+          <h2>Shop the first wave</h2>
+          <p>Locked keepers for the Etsy drop. Buttons go to Etsy when listings are live.</p>
+        </div>
+        <span class="coming">Coming to Etsy</span>
+        <a href="#" id="dl-shortcut" class="coming" style="margin-left:8px;cursor:pointer" title="Add Jimmi at the Gym to your desktop">⬇ Desktop shortcut</a>
+      </div>
+      <div class="grid" id="product-grid"></div>
+    </section>
+
+    <section id="about" class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="badge">Story</div>
+          <h2>Anybody can walk in</h2>
+        </div>
+      </div>
+      <div class="about">
+        <p>Jimmi starts skinny — ribs, nerves, first day energy — and gets buff. Same spiky hair. Same blank face. Real legs. Neon outline.</p>
+        <p>This site is home base: play the track, browse the gear, then buy on Etsy. Print-on-demand keeps fulfillment simple while the shop grows.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>© <span id="year"></span> Jimmi at the Gym · Spelling J-I-M-M-I</p>
+      <p>Shop checkout happens on Etsy. Song by BRØCK.</p>
+    </div>
+  </footer>
+
+  <script src="products.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const grid = document.getElementById("product-grid");
+    const products = window.JIMMI_PRODUCTS || [];
+    grid.innerHTML = products.map((p) => `
+      <article class="card">
+        <div class="card-img"><img src="${p.image}" alt="${p.name}" loading="lazy" /></div>
+        <div class="card-body">
+          <div class="card-tag">${p.tag}</div>
+          <h3>${p.name}</h3>
+          <p>${p.blurb}</p>
+          <div class="sku">${p.sku}</div>
+          <a class="btn btn-etsy" href="${p.etsyUrl}" target="_blank" rel="noopener noreferrer">Buy on Etsy</a>
+        </div>
+      </article>
+    `).join("");
+
+    const STORE_VOLUME = 0.48; // mid-range mall vibe
+    const audio = document.getElementById("jimmi-audio");
+    const note = document.getElementById("audio-note");
+    const gate = document.getElementById("enter-gate");
+    const enterBtn = document.getElementById("enter-btn");
+
+    audio.volume = STORE_VOLUME;
+    audio.loop = true;
+
+    audio.addEventListener("error", () => {
+      note.textContent = "Audio file missing — drop MP3 at audio/jimmy-at-the-gym.mp3";
+    });
+
+    function hideGate() {
+      if (!gate) return;
+      gate.classList.add("is-gone");
+      gate.setAttribute("aria-hidden", "true");
+      setTimeout(() => { gate.hidden = true; }, 400);
+    }
+
+    function showGate() {
+      if (!gate) return;
+      gate.hidden = false;
+      gate.classList.remove("is-gone");
+      gate.setAttribute("aria-hidden", "false");
+    }
+
+    async function startStoreSoundtrack() {
+      try {
+        audio.volume = STORE_VOLUME;
+        audio.muted = false;
+        await audio.play();
+        hideGate();
+        note.textContent = "Soundtrack on — mid volume, looping. Purchases still happen on Etsy.";
+        return true;
+      } catch (err) {
+        showGate();
+        note.textContent = "Tap Enter to start the floor soundtrack (browsers block autoplay with sound).";
+        return false;
+      }
+    }
+
+    // Try immediate autoplay; most browsers need one tap — gate feels like walking into the store.
+    startStoreSoundtrack();
+
+    function enterStore(e) {
+      if (e) e.preventDefault();
+      startStoreSoundtrack();
+    }
+
+    if (enterBtn) enterBtn.addEventListener("click", enterStore);
+    if (gate) {
+      gate.addEventListener("click", (e) => {
+        if (e.target === gate || e.target.closest("#enter-btn") || e.target.closest(".enter-card")) {
+          enterStore(e);
+        }
+      });
+    }
+
+    // If user interacts anywhere while gate is up, start music (store entry).
+    ["pointerdown", "keydown", "touchstart"].forEach((evt) => {
+      document.addEventListener(evt, function once() {
+        if (!audio.paused) return;
+        startStoreSoundtrack();
+      }, { once: true, capture: true });
+    });
+  </script>
+<script>
+document.getElementById("dl-shortcut").addEventListener("click",e=>{e.preventDefault();
+const base=location.href.split("#")[0];const ico=new URL("jimmi-round.ico",base).href;
+const txt="[InternetShortcut]\r\nURL="+base+"\r\nIconFile="+ico+"\r\nIconIndex=0\r\n";
+const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/octet-stream"}));
+a.download="Jimmi at the Gym.url";a.click();});
+</script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http")){addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));}</script></body>
+</html>
