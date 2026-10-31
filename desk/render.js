@@ -68,5 +68,5 @@ function render(d,o){o=o||{};const px=o.px||2000,k=px/800;const c=document.creat
 function ready(cb){const A=W.JIMMI_ASSETS;if(!W.JIMMI_IMG){W.JIMMI_IMG={};for(const k in A){const i=new Image();i.src=A[k];W.JIMMI_IMG[k]=i;}}
  Promise.all(Object.values(W.JIMMI_IMG).map(i=>i.decode?i.decode().catch(()=>{}):0)).then(cb);}
 function hexName(h){for(const k in C)if(C[k].toLowerCase()===(h||'').toLowerCase())return k;return h;}
-W.JimmiRender={C,BASES,INKS,G,LOGO_H,WORD_W,logoPreset,wordPreset,make,validate,draw,render,hit,ready,hexName};
+W.JimmiRender={_tint:tint,path,C,BASES,INKS,G,LOGO_H,WORD_W,logoPreset,wordPreset,make,validate,draw,render,hit,ready,hexName};
 })(window);

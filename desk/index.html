@@ -7,7 +7,7 @@
 <header class="facade">
  <div class="awning"></div>
  <div class="signrow">
-  <h1 class="neon">Jimmi's Design Shop</h1>
+  <div class="brand"><h1 class="neon">Jimmi's Design Shop</h1><p class="sub">Jimmi line creator's tool · <button id="bProf" class="who" title="Who's designing? (settings)">⚙ <span id="whoName">…</span></button></p></div>
   <div class="tools">
    <button id="bOpen" title="Open design (Ctrl+O)">📂<span> Open</span></button>
    <button id="bUndo" title="Undo (Ctrl+Z)">↶</button><button id="bRedo" title="Redo (Ctrl+Y)">↷</button>
@@ -22,18 +22,36 @@
 <audio id="bgm" src="audio/jimmy-soft.mp3" loop preload="none" playsinline></audio>
 <main class="shop">
  <aside class="rack left">
-  <section data-tab="garment"><h4>Garments rack</h4><div class="row" id="g"></div>
-   <h4>View</h4><div class="row" id="view"></div>
+  <section data-tab="garment"><button id="teeBtn" class="wide teeBtn">👕 Tee Editor <small>(black tee, stickers, sleeves, back)</small></button><button id="legBtn" class="wide teeBtn">🩱 Leggings Editor <small>(waistband wrap, both legs, back)</small></button><h4>Garments rack</h4><div class="row" id="g"></div>
+   <div class="legacy"><h4>View</h4><div class="row" id="view"></div></div>
    <h4>Start from an idea</h4><div class="starters" id="starters"></div><button id="surprise" class="wide">🎲 Surprise me</button></section>
+  <section data-tab="inbox" class="subs"><div class="store-sign"><span class="neon2" id="subsSign">Submissions</span></div>
+   <div id="review"></div>
+   <div class="row"><button class="chip" id="rOpen">📂 Open file</button><button class="chip" id="rLink">🔗 Paste link</button></div><p class="hint">Or drop a submitted .jimmi.json anywhere on the window.</p></section>
   <section data-tab="inbox"><h4>📥 JimmiBot Inbox</h4><div id="inbox" class="inbox"></div><p class="hint">Or drop a .jimmi.json anywhere on the window.</p></section>
  </aside>
- <section class="stage"><div class="spot"></div><canvas id="cv" width="1200" height="1600"></canvas>
+ <section class="stage"><div class="spot"></div><div class="stagebar teeOnly"><button id="flip" class="hot">⟲ Flip: <b id="flipLab">Front</b></button><button id="stkBtn">➕ Sticker page</button></div><canvas id="cv" width="1200" height="1600"></canvas>
   <p class="cap" id="cap"></p></section>
  <aside class="rack right">
   <section data-tab="colors"><h4>Base color</h4><div class="row" id="base"></div>
-   <h4>Logo color</h4><div class="row" id="logoc"></div><h4>Hair color</h4><div class="row" id="hairc"></div>
-   <h4>Side stripe</h4><div class="row" id="st"></div><label class="sl">Stripe width <input type="range" id="sw" min="2" max="14" step="1"></label></section>
-  <section data-tab="place"><h4>Selected: <span id="selName"></span></h4><div class="row" id="selRow"></div>
+   <div class="legacy"><h4>Logo color</h4><div class="row" id="logoc"></div><h4>Hair color</h4><div class="row" id="hairc"></div>
+   <h4>Side stripe</h4><div class="row" id="st"></div><label class="sl">Stripe width <input type="range" id="sw" min="2" max="14" step="1"></label></div>
+   <div class="teeOnly"><h4>Sticker body / wordmark color</h4><div class="row" id="sBody"></div><h4>Sticker hair color</h4><div class="row" id="sHair"></div></div></section>
+  <section data-tab="place" class="teeOnly" id="teePanel"><h4>Print zone</h4><div class="row" id="zones"></div>
+   <button id="stkBtn2" class="wide">➕ Add from Sticker page</button>
+   <h4>Selected sticker: <span id="sName">none</span></h4>
+   <label class="sl">Size <input type="range" id="sSize" min="0.1" max="3" step="0.01"></label>
+   <label class="sl">Angle <span id="sAngV">0°</span> <input type="range" id="sAng" min="-180" max="180" step="1"></label>
+   <div class="row" id="sActs"><button class="chip" data-a="dup">⧉ Duplicate</button><button class="chip" data-a="del">🗑 Delete</button><button class="chip" data-a="fwd">⬆ Forward</button><button class="chip" data-a="bwd">⬇ Back</button></div>
+   <div class="rep" id="rep"><h4>🔁 Repeat / pattern</h4><div class="row" id="repMode"></div>
+   <label class="sl">Count <b id="repNV">8</b> <input type="range" id="repN" min="2" max="24" step="1" value="8"></label>
+   <label class="sl">Spacing <b id="repGV">10</b> <input type="range" id="repG" min="0" max="80" step="1" value="10"></label>
+   <div class="row"><button class="chip hot" id="repGo">🔁 Repeat it</button><button class="chip" id="repUn">Ungroup</button><button class="chip" id="repDel">🗑 Delete group</button></div>
+   <p class="hint" id="repHint">Pick a sticker, then repeat it. Copies tile evenly and stay linked as a group, so repeating again re-tiles them.</p></div>
+   <p class="hint">Tap a zone (front, back, either sleeve, or the waistband/legs on leggings) to select it. ⧉ Duplicate keeps adding copies, so you can stack several stickers in one zone. Drag a sticker to move · ⤡ corner to resize · ⟳ handle to rotate (hold Shift to snap 45°) · pinch / twist with two fingers.</p>
+   <h4>Design</h4><label class="fld">Name <input id="nm2" maxlength="60"></label><label class="sl chk"><span><input type="checkbox" id="creditTag"> Include "designs by" credit tag on the print PNG</span></label>
+   <p class="spec" id="spec2"></p></section>
+  <section data-tab="place" class="legacy"><h4>Selected: <span id="selName"></span></h4><div class="row" id="selRow"></div>
    <h4>Logo placement</h4><div class="row" id="lp"></div>
    <h4>Wordmark placement</h4><div class="row" id="wp"></div>
    <label class="sl">Logo size <input type="range" id="ls" min="0.2" max="2" step="0.01"></label>
@@ -44,10 +62,11 @@
    <p class="spec" id="spec"></p></section>
  </aside>
 </main>
-<nav class="tabbar" id="tabbar"><button data-t="garment" class="on">👕<span>Garment</span></button><button data-t="colors">🎨<span>Colors</span></button><button data-t="place">📍<span>Placement</span></button><button data-t="inbox">📥<span>Inbox</span></button></nav>
+<nav class="tabbar" id="tabbar"><button data-t="garment" class="on">👕<span>Garment</span></button><button data-t="colors">🎨<span>Colors</span></button><button data-t="place">📍<span>Placement</span></button><button data-t="inbox">📥<span id="tabInbox">Inbox</span></button></nav>
+<div class="modal lib" id="lib" hidden><div class="box"><div class="store-sign"><span class="neon2">Sticker Page</span></div><p class="hint">Only official Jimmi art: the Buff Jimmi logo and the "Jimmi / at the gym" wordmark. Tap one to stick it on <b id="libZone">the front</b>. Recolor it after.</p><div id="libGrid" class="libgrid"></div><button id="libClose">Close</button></div></div>
 <div class="modal" id="modal" hidden><div class="box"><div id="mBody"></div><button id="mClose" class="hot">Got it</button></div></div>
 <div class="drop" id="drop" hidden>Drop the .jimmi.json to load it</div>
 <div class="toast" id="toast"></div>
-<script src="assets.js"></script><script src="inbox/inbox.js"></script><script src="render.js"></script><script src="app.js"></script>
+<script src="assets.js"></script><script src="assets2.js"></script><script src="inbox/inbox.js"></script><script src="render.js"></script><script src="tee-render.js"></script><script src="app.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{scope:"./"}));</script>
 </body></html>

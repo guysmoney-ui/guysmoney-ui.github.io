@@ -1,11 +1,10 @@
 <!DOCTYPE html><html><body><pre id="out">pending</pre>
-<script src="../assets.js"></script><script src="../render.js"></script>
+<script src="../assets.js"></script><script src="../assets2.js"></script><script src="../render.js"></script><script src="../tee-render.js"></script>
 <script>
 const R=JimmiRender,p=new URLSearchParams(location.hash.slice(1)),px=+(p.get('px')||2000);
 function dec(s){return decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))));}
-R.ready(()=>{try{const d=JSON.parse(dec(p.get('d')));const e=R.validate(d);if(e.length)throw new Error(e.join('; '));
- const vs=[...new Set([d.logo.side||'front',d.wordmark.hidden?(d.logo.side||'front'):(d.wordmark.side||'front'),d.view||'front'])].sort();
- const sheet=print=>{const cs=vs.map(v=>R.render(d,{print,view:v,px}));if(cs.length==1)return cs[0];const c=document.createElement('canvas');c.width=cs[0].width*cs.length;c.height=px;cs.forEach((s,i)=>c.getContext('2d').drawImage(s,i*s.width,0));return c;};
- document.getElementById('out').textContent=JSON.stringify({ok:true,mockup:sheet(false).toDataURL('image/png'),print:sheet(true).toDataURL('image/png')});
+R.ready(()=>{try{let d=JSON.parse(dec(p.get('d')));const e=R.validate(d);if(e.length)throw new Error(e.join('; '));d=R.upgrade(d);
+ const files={};for(const x of R.exportsOf(d,{px}))files[x.suffix]=x.canvas.toDataURL('image/png');
+ document.getElementById('out').textContent=JSON.stringify({ok:true,files});
 }catch(err){document.getElementById('out').textContent=JSON.stringify({ok:false,error:String(err)});}});
 </script></body></html>

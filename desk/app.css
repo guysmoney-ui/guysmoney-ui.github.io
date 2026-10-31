@@ -63,3 +63,33 @@ input[type=range]{width:100%;height:32px;accent-color:var(--neon)}
 }
 @media (max-width:1000px) and (min-width:700px){.stage{height:auto;flex:1}.shop{flex-direction:row}.shop>.rack section{flex:none;width:380px;margin:8px}#cv{max-height:calc(100vh - 220px)}}
 @media (max-width:460px){.tools{flex-wrap:nowrap;gap:4px}.tools button{padding:4px;flex:1}.tools .hot span{display:none}.tools .hot::after{content:" Send";font-size:13px}.tools button:not(.hot) span{display:none}.tools .hot{flex:3}.neon{font-size:26px;width:100%;text-align:center}.cap{display:none}}
+/* ---- Tee Editor + review (v2) ---- */
+.brand{display:flex;flex-direction:column}.sub{margin:0;font-size:12px;letter-spacing:.12em;color:var(--cyan);text-shadow:0 0 6px var(--cyan);text-transform:uppercase}
+.who{min-height:32px;background:#0008;border:1px solid var(--yel);border-radius:99px;padding:2px 10px;color:var(--yel);font-size:12px;letter-spacing:0;text-transform:none}
+body:not(.tee) .teeOnly{display:none!important}body.tee .legacy{display:none!important}
+.teeBtn{border-color:var(--neon)!important;box-shadow:0 0 10px var(--neon);font-weight:800}.teeBtn small{display:block;font-weight:400;font-size:11px;color:#cfc6ff}
+.stagebar{position:relative;display:flex;gap:8px;margin-bottom:8px;z-index:2}.stagebar button{min-height:44px;padding:6px 16px;border-radius:99px;border:1px solid var(--cyan);background:#0009;box-shadow:0 0 8px var(--cyan)}
+#cv.flipping{transition:transform .22s ease-in}
+.store-sign{background:#0b0618;border:3px solid var(--neon);border-radius:10px;padding:6px;margin:8px 0;text-align:center;box-shadow:0 0 14px var(--neon),inset 0 0 10px var(--neon)}
+.neon2{font-family:"Brush Script MT","Segoe Script",cursive;font-size:28px;color:#fff;text-shadow:0 0 6px var(--cyan),0 0 16px var(--cyan),0 0 30px var(--cyan);animation:flick 7s infinite}
+.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;max-height:60vh;overflow:auto;padding:4px}
+.libgrid h5{grid-column:1/-1;margin:8px 0 0;color:var(--yel);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.libgrid button{min-height:92px;border-radius:10px;border:2px solid #fff3;background:repeating-conic-gradient(#1a1030 0 25%,#2a1850 0 50%) 0 0/20px 20px;padding:4px}
+.libgrid button:hover,.libgrid button:focus{border-color:var(--neon);box-shadow:0 0 10px var(--neon)}.libgrid canvas{width:100%;height:auto;display:block}
+.lib .box{max-width:760px;width:calc(100% - 24px)}
+.rv{border:2px solid var(--yel);border-radius:10px;padding:8px;background:#0008;font-size:13px}.rv b.credit{color:var(--yel);font-style:italic}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;background:#555}
+.pill.submitted{background:#ff7a00}.pill.approved{background:#1a9e4a}.pill.rejected{background:#c8102e}.pill.draft{background:#5b2a9e}
+.rv textarea{width:100%;background:#0008;color:#fff;border:1px solid #fff4;border-radius:8px;padding:6px;font:inherit;margin-top:6px}
+.rv .acts{display:flex;gap:6px;margin-top:6px}.rv .acts button{flex:1;min-height:44px;border-radius:99px;border:0;font-weight:800}.ok{background:#1a9e4a}.no{background:#c8102e}
+.rv ol{margin:6px 0 0;padding-left:18px;font-size:11px;color:#cfc6ff}
+.chk input{width:20px;height:20px;vertical-align:middle}
+.prof .chip{font-size:16px}.prof input{width:100%;min-height:44px;background:#0008;color:#fff;border:1px solid #fff4;border-radius:8px;padding:8px;font:inherit;margin-top:6px}
+@media (max-width:460px){.sub{font-size:10px;text-align:center}.brand{width:100%}.stagebar{margin-bottom:4px}.stagebar button{padding:4px 10px;font-size:13px}}
+@media (max-width:1000px){.stage{flex-direction:column}#cv{max-height:calc(100% - 52px)}}
+body.tee #cv{max-height:calc(100vh - 210px)}@media (max-width:1000px){body.tee #cv{max-height:calc(100% - 52px)}}
+@media (max-width:1000px){.shop>.rack section.subs{flex:4 1 auto}}
+@media (pointer:coarse),(max-width:1000px){.who{min-height:44px}}
+.rep{margin-top:10px;padding:8px 10px;border:1px dashed #ff2bd666;border-radius:12px}
+.chip.hot{background:#ff2bd6;color:#fff}
+h5 .new{font-style:normal;background:#ffe14a;color:#0b0618;border-radius:6px;padding:0 5px;font-size:10px;margin-left:4px}

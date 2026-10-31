@@ -1,4 +1,4 @@
-# `.jimmi.json` — Jimmi's Design Shop design file (schema v1)
+# `.jimmi.json` — Jimmi's Design Shop design file (schema v2; v1 still loads)
 
 ```json
 {
@@ -49,3 +49,69 @@
 - `<slug>-print.png`, a transparent print layer with only the stripe, logo, and wordmark, clipped to the garment outline
 
 **Headless render (box):** `node desk/tools/render_design.js file.jimmi.json -o outdir [--px 2000]`
+
+## Schema v2 (current)
+
+v2 keeps every v1 field and adds the fields below. The app and `render_design.js` accept both versions. A v1 file is upgraded on load: `version` becomes 2, `designer` defaults to `{name: author, role}`, `status` becomes `"draft"`, and `history` becomes `[]`. Saving always writes v2.
+
+```json
+{
+  "version": 2,
+  "editor": "tee",                    // present = Tee Editor design; absent = classic garment (v1 behaviour)
+  "zones": {                          // Tee Editor only. Each zone holds sticker objects
+    "front": [], "back": [], "leftSleeve": [], "rightSleeve": [
+      { "id": "s3k9q2a",              // unique per design
+        "el": "logo",                 // logo | body (logo, no hair) | hair | word (wordmark) | combo (logo + wordmark)
+        "colors": { "body": "#ffd400", "hair": "#ffd400" },  // body = logo body / wordmark ink
+        "x": 500, "y": 192,           // centre, 600x800 canvas units as seen on the FRONT view
+        "scale": 0.7,                 // 0.1-3 (logo 1.0 = 100 units tall, wordmark 1.0 = 170 units wide)
+        "rotation": 45,               // degrees, clockwise, any angle (-180..180)
+        "z": 1 }                      // stacking order inside the zone (higher = on top)
+    ]
+  },
+  "designer": { "name": "Janelle", "role": "designer" }, // owner | designer | bot
+  "status": "draft",                  // draft | submitted | approved | rejected
+  "reviewNotes": "",                  // Guy's notes (required on reject)
+  "history": [ { "at": "2026-10-30T10:00:00-06:00", "by": "Janelle", "role": "designer", "action": "submitted", "note": "" } ],
+                                      // actions: submitted, resubmitted, rejected, approved, exported
+  "creditTag": false                  // true = small "designs by <name>" tag on the print PNG (default off)
+}
+```
+
+**Zones and print areas.** All values are in canvas units: front `[178,170,244,325]` (12″ × 16″), back `[178,150,244,325]` (12″ × 16″), left sleeve `[430,122,140,140]` (5″ × 5″, on the viewer's right in the front view), and right sleeve `[30,122,140,140]`. Stickers are clipped to their zone's print rect and, on a sleeve, to the sleeve shape. Both sleeves show in both views. In the back view, a sleeve's position is mirrored, but the art is not flipped.
+
+**Brand rule (v2).** A sticker's `el` must be one of the five Jimmi elements listed above. There is no free text and no other clip art. Validation rejects any other value.
+
+**Credits.** `designs by <name>` appears on the design card, the inbox, and the mockup PNG footer. It never appears on print PNGs unless `creditTag` is true.
+
+**Bundle (v2 Tee Editor):** `<slug>.jimmi.json`, `<slug>-mockup.png` (front and back side by side with a credit footer), and `<slug>-print-front.png`, `-print-back.png`, `-print-left-sleeve.png`, and `-print-right-sleeve.png`. The print PNGs are transparent at 150 dpi, so the front and back are 1800 × 2400 and each sleeve is 750 × 750. Classic garments still export `-mockup.png` and `-print.png`.
+
+**Review workflow.** This is file and link based, with no backend. A designer taps **Submit to Guy**, which sets `status: "submitted"` and shares the JSON, the mockup, and a `?d=` link through the Web Share API. If sharing isn't available, the files download and a prefilled `mailto:guysmoney@gmail.com` link appears. The owner opens the submission by file, link, or drop, then reviews it in the Submissions tray. **Approve** sets `approved` and runs Send to JimmiBot. **Reject** requires notes, sets `rejected`, and shares the file and link back. The designer then revises and resubmits. There are no accounts: the role is a localStorage label (`jimmiProfile`), so anyone with the URL can pick Owner.
+
+## v2 additions (Oct 31: leggings editor, repeat tool, new stickers). Still `version: 2`, and every older v2 file loads unchanged.
+
+- **`garment: "leggings"` with `editor: "tee"`** uses the leggings zone set instead of the tee zones:
+  - `waistband` `[160,82,280,50]` (14″ × 2.5″, front view)
+  - `waistbandBack` (same rect, back view)
+  - `rightLeg` `[150,138,150,612]` and `leftLeg` `[300,138,150,612]` (7″ × 30″, front view)
+  - `seat` `[150,138,300,612]` (back view)
+  
+  Stickers are clipped to the zone rect and the leggings outline. Tee designs keep `front/back/leftSleeve/rightSleeve`. A zone from the other set fails validation.
+- **New sticker `el` values:**
+  - `head`: just the Jimmi head (blank faceless oval outline plus spiky hair; `colors.body` = head, `colors.hair` = hair; 1.0 = 80 units tall)
+  - `skinny`: Skinny Jimmi logo, one color (1.0 = 100 units tall)
+  - `leg`: "Jimmi" letters stacked upright down the leg, clean letters with no dashes, one color (1.0 = 300 units tall)
+  
+  The art is transparent white PNGs in `assets/stickers/`, embedded in `assets2.js`.
+- **Optional `group` on a sticker** (string). Copies made by the Repeat tool share one `group` id:
+  - Repeating a grouped sticker again re-tiles the whole group.
+  - **Ungroup** removes the field.
+  - **Delete group** removes every copy.
+  - Readers that don't know `group` can ignore it.
+- **Repeat modes:**
+  - `wrap` (leggings): N copies evenly spaced around the full waistband, splitting front and back, so pitch = 560/N.
+  - `row`: across the zone.
+  - `column`: down the zone.
+  
+  Spacing is the gap between copies in canvas units. Copies shrink if they would overlap or overflow the band height.
+- **Leggings bundle:** `-mockup.png` (front and back), `-print-waistband.png`, `-print-waistband-back.png`, `-print-right-leg.png`, `-print-left-leg.png`, `-print-seat.png`
