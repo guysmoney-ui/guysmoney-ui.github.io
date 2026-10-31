@@ -321,6 +321,22 @@ $('#setTop').onchange=e=>{SET[SET.active]=D;const n=mkPiece(e.target.value,SET.t
 $('#setBot').onchange=e=>{SET[SET.active]=D;const n=mkPiece(e.target.value,SET.bottom.colors.base);SET.bottom=n;if(SET.active==='bottom'){D=n;last=snap();zone=firstZone(D);sid=null;}ui();};
 $('#outfit').onclick=e=>{if(!SET)return;const r=e.target.getBoundingClientRect(),y=(e.clientY-r.top)*1100/r.height,w=y<OUT.split?'top':'bottom';if(SET.target!=='both'){SET.target=w;}if(w!==SET.active)setActive(w);ui();};
 window.__jimmiSet={get:()=>SET&&{...SET,[SET.active]:D},start:startSet,save:()=>saveSet(),exit:exitSet};
+
+/* ---- 🪞 Mirror: paired left/right zones ---- */
+const MP={leftSleeve:'rightSleeve',leftArm:'rightArm',leftWrist:'rightWrist',leftForearm:'rightForearm',leftLeg:'rightLeg',shLeftLeg:'shRightLeg'};Object.entries(MP).forEach(([a,b])=>MP[b]=a);
+const hasPairs=()=>tee()&&R.zk(D).some(z=>MP[z]&&R.zk(D).includes(MP[z]));
+function mirSync(prev){const zs=d=>{const m=new Map();for(const [z,a] of Object.entries(d.zones||{}))(a||[]).forEach(s=>m.set(s.id,[z,s]));return m;};const P=zs(prev),N=zs(D);
+ const mk=(s,t)=>{const c=JSON.parse(JSON.stringify(s));c.id=t?t.id:'s'+Math.random().toString(36).slice(2,8);c.mir=s.id;c.x=600-s.x;c.rotation=-(s.rotation||0);if(s.curve)c.curve=s.curve;return c;};
+ const same=(a,b)=>{const x={...a},y={...b};delete x.mir;delete y.mir;return JSON.stringify(x)===JSON.stringify(y);};
+ for(const [id,[z,s]] of N){const oz=MP[z];if(!oz||!D.zones[oz])continue;const p=P.get(id);if(p&&p[0]===z&&same(p[1],s)&&s.mir&&N.has(s.mir))continue;
+  if(p&&s.mir&&!N.has(s.mir)&&P.has(s.mir))continue;/* twin was just deleted by user: handled below */
+  const arr=D.zones[oz],i=arr.findIndex(q=>q.id===s.mir);const t=i>=0?arr[i]:null;if(t&&p&&same(p[1],s))continue;const c=mk(s,t);if(t)arr[i]=c;else{arr.push(c);s.mir=c.id;}}
+ for(const [id,[z,s]] of P)if(!N.has(id)&&s.mir&&MP[z]){const oz=MP[z];if(D.zones[oz])D.zones[oz]=D.zones[oz].filter(q=>q.id!==s.mir);}
+ for(const [id,[z,s]] of zs(D))if(s.mir&&!zs(D).has(s.mir))delete s.mir;}
+const _commitM=commit;commit=function(){let prev=null;if(D.mirror&&hasPairs()){try{prev=JSON.parse(last);}catch(_){}}_commitM();if(prev){mirSync(prev);last=snap();}};
+function paintMir(){const b=$('#mirBtn');b.hidden=!hasPairs();b.classList.toggle('on',!!D.mirror);b.innerHTML='🪞 Mirror: <b>'+(D.mirror?'On':'Off')+'</b>';}
+$('#mirBtn').onclick=()=>{if(D.mirror){delete D.mirror;for(const a of Object.values(D.zones||{}))(a||[]).forEach(s=>delete s.mir);toast('🪞 Mirror off — both sides are now independent');}else{D.mirror=true;toast('🪞 Mirror on — changes copy to the opposite side');}commit();ui();};
+const _uiM=ui;ui=function(){_uiM.apply(this,arguments);paintMir();};
 /* ---- boot ---- */
 R.ready(()=>{paintInbox();paintSaved();if(!PROF)setTimeout(()=>profileModal(true),50);const q=new URLSearchParams(location.search).get('d')||new URLSearchParams(location.hash.slice(1)).get('d');
  if(q){try{load(JSON.parse(b64u.dec(q)),'Opened design from link');undo=[];}catch(_){toast('That link has a broken design');}}
