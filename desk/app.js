@@ -10,7 +10,7 @@ const snap=()=>JSON.stringify(D);let last=snap();
 function commit(){const s=snap();if(s===last)return;undo.push(last);if(undo.length>200)undo.shift();redo=[];last=s;D.updated=new Date().toISOString();}
 function load(d,msg){const e=R.validate(d);if(e.length){toast('Could not open: '+e[0]);return false;}
  d=R.upgrade(d);d.colors.stripeWidth=d.colors.stripeWidth||7;d.view=d.view||'front';d.logo.side=d.logo.side||'front';d.wordmark.side=d.wordmark.side||'front';
- undo.push(last);redo=[];D=d;last=snap();if(tee()){zone=D.garment==='leggings'?(D.view==='back'?'waistbandBack':'waistband'):(D.view==='back'?'back':'front');sid=null;}
+ undo.push(last);redo=[];D=d;last=snap();if(tee()){zone=D.garment==='bottle'?(D.view==='back'?'bottleBack':'bottleFront'):(D.garment==='leggings'||D.garment==='joggers')?(D.view==='back'?'waistbandBack':'waistband'):(D.view==='back'?'back':'front');sid=null;}
  if(isOwner()&&D.status==='submitted'){msg='Submission from '+((D.designer||{}).name||'a designer')+' — review it in Submissions';showTab('inbox');setTimeout(()=>{const x=document.querySelector('.subs');if(x)x.scrollIntoView({block:'start'});},60);}
  else if(!isOwner()&&D.status==='rejected'){msg='Guy sent this back: revise and resubmit';}
  ui();if(msg)toast(msg);return true;}
@@ -32,7 +32,7 @@ $('#inbox').onclick=async e=>{const b=e.target.closest('[data-i]');if(!b)return;
 if(location.protocol.startsWith('http'))fetch('inbox/index.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{INBOX=j.designs.map(x=>({...x,design:(INBOX.find(y=>y.file===x.file)||{}).design}));paintInbox();}).catch(()=>{});
 /* ---- UI ---- */
 function ui(){const g=G[D.garment];document.body.classList.toggle('tee',tee());paintTee();paintReview();paintRole();
- chips('#g',Object.keys(G),D.garment,k=>G[k].n);chips('#view',['front','back'],D.view,v=>v==='front'?'Front':'Back');
+ chips('#g',Object.keys(G).filter(k=>!G[k].editorOnly),D.garment,k=>G[k].n);chips('#view',['front','back'],D.view,v=>v==='front'?'Front':'Back');
  swatches('#base',R.BASES,D.colors.base);swatches('#logoc',R.INKS,D.colors.logo);swatches('#hairc',R.INKS,D.colors.hair);
  swatches('#st',R.INKS.slice(0,8),D.colors.stripe,`<button class="chip${D.colors.stripe?'':' on'}" data-v="none">None</button>`);
  chips('#lp',g.lp,D.logo.placement);chips('#wp',g.wp,D.wordmark.hidden?'none':D.wordmark.placement);chips('#selRow',['logo','word'],sel,v=>v==='logo'?'Buff Jimmi logo':'Wordmark');
@@ -43,7 +43,7 @@ function ui(){const g=G[D.garment];document.body.classList.toggle('tee',tee());p
 function draw(){if(tee())return drawT();R.draw(ctx,D,{sel});$('#cap').textContent='Dashed line = print area · '+G[D.garment].area+' · preview is approximate';
  $('#spec').textContent=`${G[D.garment].n} · base ${R.hexName(D.colors.base)}\nlogo ${R.hexName(D.colors.logo)} / hair ${R.hexName(D.colors.hair)} @ ${D.logo.side} ${Math.round(D.logo.x)},${Math.round(D.logo.y)} ×${(+D.logo.scale).toFixed(2)}\nwordmark ${D.wordmark.hidden?'none':`${D.wordmark.side} ${Math.round(D.wordmark.x)},${Math.round(D.wordmark.y)} ×${(+D.wordmark.scale).toFixed(2)} ${Math.round(D.wordmark.rotation)}°`}\nstripe ${D.colors.stripe?R.hexName(D.colors.stripe)+' '+D.colors.stripeWidth+'px':'none'}`;}
 const on=(id,fn)=>$(id).addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b){fn(b.dataset.v);commit();ui();}});
-on('#g',v=>{const n=R.make({designer:D.designer,garment:v,base:D.colors.base,logo:D.colors.logo,hair:D.colors.hair,stripe:D.colors.stripe,name:D.name,notes:D.notes,author:D.author});n.colors.stripeWidth=D.colors.stripeWidth;n.created=D.created;D=n;});
+on('#g',v=>{const n=R.make({designer:D.designer,garment:v,base:D.colors.base,logo:D.colors.logo,hair:D.colors.hair,stripe:D.colors.stripe,name:D.name,notes:D.notes,author:D.author});n.colors.stripeWidth=D.colors.stripeWidth;n.created=D.created;D=R.upgrade(n);if(tee()){zone=(D.garment==='leggings'||D.garment==='joggers')?'waistband':'front';sid=null;}});
 on('#view',v=>D.view=v);on('#base',v=>D.colors.base=v);on('#logoc',v=>{D.colors.logo=v;D.colors.hair=v;});on('#hairc',v=>D.colors.hair=v);on('#st',v=>D.colors.stripe=v==='none'?null:v);
 on('#lp',v=>{D.logo=R.logoPreset(D.garment,v);D.view=D.logo.side;sel='logo';if(D.wordmark.placement==='under the logo')D.wordmark=R.wordPreset(D.garment,'under the logo',D.logo);});
 on('#wp',v=>{D.wordmark=R.wordPreset(D.garment,v,D.logo);sel='word';if(!D.wordmark.hidden)D.view=D.wordmark.side;});
@@ -78,7 +78,7 @@ const slug=()=>(D.name||'jimmi').toLowerCase().replace(/[^a-z0-9]+/g,'-').replac
 const blob=c=>new Promise(r=>c.toBlob(r,'image/png'));
 async function bundle(only){D.updated=new Date().toISOString();const s=slug();const out=[new File([JSON.stringify(D,null,2)],s+'.jimmi.json',{type:'application/json'})];
  for(const x of R.exportsOf(D,{px:2000})){if(only&&!only.includes(x.suffix))continue;out.push(new File([await blob(x.canvas)],s+'-'+x.suffix+'.png',{type:'image/png'}));}return out;}
-window.__jimmi={repeat:(m,c,g)=>doRepeat(m,c,g),newLeggings:()=>$('#legBtn').click(),select:(z,id)=>{zone=z;sid=id;ui();},openLib:()=>openLib(),get:()=>D,load,bundle,shareLink,undo:doUndo,redo:doRedo,state:()=>({zone,sid}),selectZone:z=>{zone=z;sid=null;ui();},addSticker:(el,c)=>addSticker(el,c),flip:()=>flip(),commit:()=>{commit();ui();},submit:()=>submit(),approve:()=>approve(),reject:n=>reject(n),setProfile:p=>setProfile(p),lastSent:()=>window.__lastSent};
+window.__jimmi={addStripe:(z,o)=>{zone=z;const s=R.sticker('stripe',{body:o.color||'#ffffff'},z,o);s.z=zmax()+1;(D.zones[z]=D.zones[z]||[]).push(s);sid=s.id;const Z=R.ZONES[z];if(Z.view&&Z.view!==D.view)D.view=Z.view;commit();ui();return s.id;},badge:()=>addBadge(),addText:(t,f,c,col)=>{const s=R.textSticker(t,f,c,{body:col||'#ffffff'},zone);s.z=zmax()+1;(D.zones[zone]=D.zones[zone]||[]).push(s);sid=s.id;commit();ui();return s.id;},repeat:(m,c,g)=>doRepeat(m,c,g),newBottle:()=>$('#botBtn').click(),newLeggings:()=>$('#legBtn').click(),select:(z,id)=>{zone=z;sid=id;const Z=R.ZONES[z];if(Z.view&&Z.view!==D.view)D.view=Z.view;ui();},openLib:()=>openLib(),get:()=>D,load,bundle,shareLink,undo:doUndo,redo:doRedo,state:()=>({zone,sid}),selectZone:z=>{zone=z;sid=null;ui();},addSticker:(el,c)=>addSticker(el,c),flip:()=>flip(),commit:()=>{commit();ui();},submit:()=>submit(),approve:()=>approve(),reject:n=>reject(n),setProfile:p=>setProfile(p),lastSent:()=>window.__lastSent};
 const dl=fs=>fs.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);},i*400));
 const touch=matchMedia('(max-width:1000px), (pointer:coarse)').matches;
 $('#bSend').onclick=()=>isOwner()?sendBot():submit();
@@ -94,12 +94,12 @@ const clampS=v=>Math.max(.1,Math.min(3,v));const normA=a=>{a=((a+180)%360+360)%3
 const mirrored=()=>R.toScreen(zone,D.view,{x:0,rotation:1}).rotation===-1;
 function clampPos(s){const [x,y,w,h]=R.ZONES[zone].rect;s.x=Math.max(x,Math.min(x+w,s.x));s.y=Math.max(y,Math.min(y+h,s.y));}
 function drawT(){R.drawTee(ctx,D,{zone,sel:sid});const Z=R.ZONES[zone];
- $('#cap').textContent=`${D.garment==='leggings'?'Leggings · ':''}Selected zone: ${Z.n} (${Z.inch[0]}″ × ${Z.inch[1]}″ print) · tap another zone to switch · preview is approximate`;
+ $('#cap').textContent=`${(D.garment==='leggings'||D.garment==='joggers')?'Leggings · ':''}Selected zone: ${Z.n} (${Z.inch[0]}″ × ${Z.inch[1]}″ print) · tap another zone to switch · preview is approximate`;
  const cnt=R.zk(D).map(k=>`${R.ZONES[k].n}: ${(D.zones[k]||[]).length}`).join(' · ');const s=cur();
- $('#spec2').textContent=`${D.garment==='leggings'?'Leggings':'Tee'} · base ${R.hexName(D.colors.base)}\n${cnt}${s?`\nselected: ${R.EL[s.el].n} @ ${Math.round(s.x)},${Math.round(s.y)} ×${s.scale.toFixed(2)} ${Math.round(s.rotation)}°`:''}${D.designer&&D.designer.name?'\ndesigns by '+D.designer.name:''}`;
+ $('#spec2').textContent=`${(D.garment==='leggings'||D.garment==='joggers')?'Leggings':'Tee'} · base ${R.hexName(D.colors.base)}\n${cnt}${s?`\nselected: ${R.EL[s.el].n} @ ${Math.round(s.x)},${Math.round(s.y)} ×${s.scale.toFixed(2)} ${Math.round(s.rotation)}°`:''}${D.designer&&D.designer.name?'\ndesigns by '+D.designer.name:''}`;
  $('#spec').textContent=$('#spec2').textContent;}
-function paintTee(){if(!tee())return;const s=cur();
- paintRep();chips('#zones',R.zk(D),zone,k=>R.ZONES[k].n);$('#flipLab').textContent=D.view==='back'?'Back':'Front';
+function paintTee(){document.body.classList.toggle('bottle',D.garment==='bottle');document.body.classList.toggle('legs',tee()&&(D.garment==='leggings'||D.garment==='joggers'));if(tee()&&(D.garment==='leggings'||D.garment==='joggers')){swatches('#st2',R.INKS.slice(0,8),D.colors.stripe,`<button class="chip${D.colors.stripe?'':' on'}" data-v="none">None</button>`);$('#sw2').value=D.colors.stripeWidth||7;}if(!tee())return;if(D.garment==='bottle'){$('#botPre').innerHTML=R.BP.map(([b,l])=>`<button class="chip${D.colors.base===C[b]&&D.colors.lid===C[l]?' on':''}" data-v="${b}|${l}"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${C[b]};border:2px solid ${C[l]}"></i> ${b} / ${l}</button>`).join('');swatches('#lidc',R.INKS.concat(['Black','Navy']).filter((v,i,a)=>a.indexOf(v)===i),D.colors.lid);chips('#botSize',['24','28'],String(D.size||24),v=>v+' oz');}const s=cur();
+ {const T=['tee','longsleeve','hoodie','zip'],L=['leggings','joggers'],arr=T.includes(D.garment)?T:L.includes(D.garment)?L:[];chips('#teeStyle',arr,D.garment,k=>G[k].n);}paintTxt();paintRep();chips('#zones',R.zk(D),zone,k=>R.ZONES[k].n);$('#flipLab').textContent=D.view==='back'?'Back':'Front';$('#flip').firstChild.textContent=D.garment==='bottle'?'⟲ Turn: ':'⟲ Flip: ';
  $('#sName').textContent=s?R.EL[s.el].n:'none — tap a sticker';['#sSize','#sAng'].forEach(i=>$(i).disabled=!s);[...$('#sActs').children].forEach(b=>b.disabled=!s);
  if(s){$('#sSize').value=s.scale;$('#sAng').value=s.rotation||0;$('#sAngV').textContent=Math.round(s.rotation||0)+'°';}
  swatches('#sBody',R.INKS,s?s.colors.body:'');swatches('#sHair',R.INKS,s?s.colors.hair:'');
@@ -122,11 +122,12 @@ function tDown(e){const p=[...pts.values()];
  if(pts.size===2){const s=cur();if(s){tp={d:Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]),a:Math.atan2(p[1][1]-p[0][1],p[1][0]-p[0][0]),s:s.scale,r:s.rotation||0};td=null;}return;}
  const [x,y]=pts.get(e.pointerId),h=R.teeHit(D,x,y,D.view,zone,sid);
  if(!h){sid=null;ui();return;}zone=h.zone;if(h.kind==='zone'){sid=null;ui();return;}sid=h.id;const s=cur(),b=R.toScreen(zone,D.view,s);
- td={kind:h.kind,cx:b.x,cy:b.y,dx:x-b.x,dy:y-b.y,s0:s.scale,d0:Math.max(8,Math.hypot(x-b.x,y-b.y))};ui();}
+ td={kind:h.kind,cx:b.x,cy:b.y,dx:x-b.x,dy:y-b.y,s0:s.scale,l0:s.len,ux:Math.cos((b.rotation||0)*Math.PI/180),uy:Math.sin((b.rotation||0)*Math.PI/180),d0:Math.max(8,Math.hypot(x-b.x,y-b.y))};ui();}
 function tMove(e){const s=cur();if(!s)return;const m=mirrored()?-1:1;
  if(tp&&pts.size===2){const p=[...pts.values()];s.scale=clampS(tp.s*Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1])/tp.d);let a=tp.r+m*(Math.atan2(p[1][1]-p[0][1],p[1][0]-p[0][0])-tp.a)*180/Math.PI;s.rotation=normA(e.shiftKey?snap45(a):a);draw();return;}
  if(!td)return;const [x,y]=pts.get(e.pointerId);
  if(td.kind==='sticker'){s.x=R.fromScreen(zone,D.view,x-td.dx);s.y=y-td.dy;clampPos(s);}
+ else if(td.kind==='size'&&s.el==='stripe'){const p0=Math.max(4,Math.abs(td.dx*td.ux+td.dy*td.uy)),p=Math.abs((x-td.cx)*td.ux+(y-td.cy)*td.uy);s.len=Math.round(Math.max(6,Math.min(760,td.l0*p/p0)));}
  else if(td.kind==='size')s.scale=clampS(td.s0*Math.hypot(x-td.cx,y-td.cy)/td.d0);
  else if(td.kind==='rot'){let a=Math.atan2(y-td.cy,x-td.cx)*180/Math.PI+90;if(e.shiftKey)a=snap45(a);s.rotation=normA(m*a);}
  draw();}
@@ -139,11 +140,31 @@ function tKey(e){const k=e.key,s=cur();if(e.ctrlKey||e.metaKey)return false;
  if(hit){e.preventDefault();clampPos(s);commit();ui();}return !!hit;}
 let flipping=false;
 async function flip(){if(flipping)return;flipping=true;const T=(a,b)=>cv.animate([{transform:`perspective(1200px) rotateY(${a}deg)`},{transform:`perspective(1200px) rotateY(${b}deg)`}],{duration:200,easing:'ease-in-out'}).finished;
- try{await T(0,90);}catch(_){}D.view=D.view==='back'?'front':'back';if(D.garment==='leggings'){if(R.ZONES[zone].view!==D.view){zone=D.view==='back'?'waistbandBack':'waistband';sid=null;}}else if(!R.ZONES[zone].sleeve){zone=D.view;sid=null;}commit();ui();try{await T(-90,0);}catch(_){}flipping=false;}
+ try{await T(0,90);}catch(_){}D.view=D.view==='back'?'front':'back';if(D.garment==='bottle'){if(!R.ZONES[zone].lid&&R.ZONES[zone].view!==D.view){zone=D.view==='back'?'bottleBack':'bottleFront';sid=null;}}else if((D.garment==='leggings'||D.garment==='joggers')){if(R.ZONES[zone].view!==D.view){zone=D.view==='back'?'waistbandBack':'waistband';sid=null;}}else if(!R.ZONES[zone].sleeve){zone=D.view;sid=null;}commit();ui();try{await T(-90,0);}catch(_){}flipping=false;}
 $('#flip').onclick=flip;
+on('#st2',v=>D.colors.stripe=v==='none'?null:v);slide('#sw2',v=>D.colors.stripeWidth=v);$('#st2').addEventListener('change',e=>{if(e.target.type==='color'){D.colors.stripe=e.target.value;commit();ui();}});
+on('#teeStyle',v=>{D.garment=v;});
+$('#hoodBtn').onclick=()=>{const n=R.makeEditor('hoodie',{designer:me(),author:me().name,base:C.Black});n.notes=D.notes||'';load(n,'Hoodie Editor: pick a color, add stickers');zone='front';sid='s-front1';ui();showTab('colors');};
+/* ---- curved text ---- */
+const th2v=t=>100*Math.log(t*32)/Math.log(64),v2th=v=>Math.round(Math.pow(64,v/100)/32*1024)/1024;
+const inch=t=>{const n=Math.round(t*32);if(Math.abs(n/32-t)>.004)return t.toFixed(3)+'″';let a=n,b=32;while(a%2===0&&b>1){a/=2;b/=2;}const w=Math.floor(a/b),r=a%b;return (w?w+(r?' ':''):'')+(r?r+'/'+b:'')+'″';};
+function paintStr(){const s=cur(),t=s&&s.el==='stripe';document.body.classList.toggle('strSel',!!t);if(!t)return;
+ chips('#stLines',['1','2','3'],String(s.lines),v=>['','Single','Double','Triple'][v]);$('#stTh').value=th2v(s.thick);$('#stThV').textContent=inch(s.thick);$('#stLen').value=s.len;$('#stLenV').textContent=(s.len/R.PPI).toFixed(1)+'″';}
+on('#stLines',v=>{const s=cur();if(s)s.lines=+v;});
+slide('#stTh',v=>{const s=cur();if(s){s.thick=Math.max(R.STH[0],Math.min(R.STH[1],v2th(v)));$('#stThV').textContent=inch(s.thick);}});
+slide('#stLen',v=>{const s=cur();if(s){s.len=v;$('#stLenV').textContent=(v/R.PPI).toFixed(1)+'″';}});
+function paintTxt(){paintStr();const s=cur(),t=s&&s.el==='text';document.body.classList.toggle('txtSel',!!t);if(!t)return;
+ chips('#tWord',R.TEXTS,s.text);chips('#tFont',['script','round'],s.font,v=>v==='script'?'Script':'Rounded');$('#tCurve').value=s.curve||0;$('#tCurveV').textContent=Math.round(s.curve||0)+'°';$('#tSp').value=s.spacing||0;$('#tSpV').textContent=s.spacing||0;}
+on('#tWord',v=>{const s=cur();if(s)s.text=v;});on('#tFont',v=>{const s=cur();if(s)s.font=v;});
+slide('#tCurve',v=>{const s=cur();if(s){s.curve=v;$('#tCurveV').textContent=v+'°';}});slide('#tSp',v=>{const s=cur();if(s){s.spacing=v;$('#tSpV').textContent=v;}});
+function addBadge(){const s=cur(),col=s?s.colors:{body:R.C.Black,hair:R.C.Black};const out=R.badge(D,zone,{body:col.body,hair:col.hair||col.body});sid=out[0].id;const Z=R.ZONES[zone];if(Z.view&&Z.view!==D.view)D.view=Z.view;commit();ui();toast('Badge added to '+Z.n.toLowerCase());}
+$('#badgeBtn').onclick=addBadge;
+on('#botPre',v=>{const [b,l]=v.split('|');D.colors.base=C[b];D.colors.lid=C[l];});on('#lidc',v=>D.colors.lid=v);on('#botSize',v=>D.size=+v);
+$('#lidc').addEventListener('change',e=>{if(e.target.type==='color'){D.colors.lid=e.target.value;commit();ui();}});
+$('#botBtn').onclick=()=>{const n=R.makeBottle({designer:me(),author:me().name});n.notes=D.notes||'';load(n,'Bottle Editor: tap the front, back or lid');zone='bottleFront';sid='s-bot1';ui();showTab('place');};
 /* ---- repeat / pattern ---- */
 let repMode='row';
-function paintRep(){const L=D.garment==='leggings',modes=L?['wrap','row','column']:['row','column'];if(!modes.includes(repMode))repMode=L?'wrap':'row';
+function paintRep(){const L=(D.garment==='leggings'||D.garment==='joggers'),modes=L?['wrap','row','column']:['row','column'];if(!modes.includes(repMode))repMode=L?'wrap':'row';
  chips('#repMode',modes,repMode,v=>({wrap:'Around waistband',row:'Row across',column:'Column down'})[v]);const s=cur();
  $('#repGo').disabled=!s;$('#repUn').disabled=$('#repDel').disabled=!(s&&s.group);
  $('#repHint').textContent=s&&s.group?`Part of a repeat group (${R.zk(D).reduce((n,z)=>n+(D.zones[z]||[]).filter(q=>q.group===s.group).length,0)} copies). Change count/spacing and tap Repeat to re-tile.`:'Pick a sticker, then repeat it. Copies tile evenly and stay linked as a group, so repeating again re-tiles them.';}
@@ -154,13 +175,13 @@ $('#repGo').onclick=()=>doRepeat(repMode,+$('#repN').value,+$('#repG').value);
 $('#repUn').onclick=()=>{const s=cur();if(s&&s.group){R.ungroup(D,s.group);commit();ui();toast('Ungrouped: each copy moves on its own now');}};
 $('#repDel').onclick=()=>{const s=cur();if(!s||!s.group)return;const g=s.group;R.zk(D).forEach(z=>D.zones[z]=(D.zones[z]||[]).filter(q=>q.group!==g));sid=null;commit();ui();};
 $('#legBtn').onclick=()=>{const n=R.makeLeggings({designer:me(),author:me().name});n.notes=D.notes||'';load(n,'Leggings Editor: tap the waistband or a leg');zone='leftLeg';sid='s-leg1';ui();showTab('place');};
-$('#teeBtn').onclick=()=>{const n=R.makeTee({designer:me(),author:me().name});n.notes=D.notes||'';load(n,'Tee Editor: black tee ready');zone='front';sid='s-front1';ui();showTab('place');};
+$('#teeBtn').onclick=()=>{const n=R.makeEditor('tee',{designer:me(),author:me().name});n.notes=D.notes||'';load(n,'Tee Editor: black tee ready');zone='front';sid='s-front1';ui();showTab('place');};
 /* sticker page */
 function openLib(){const g=$('#libGrid');if(!g.dataset.done){let h='';for(const el of ['head','skinny','leg',...Object.keys(R.EL).filter(k=>!['head','skinny','leg'].includes(k))]){h+=`<h5>${R.EL[el].n}${['head','skinny','leg'].includes(el)?' <i class="new">NEW</i>':''}</h5>`;R.PRESETS.forEach(([b,hr],i)=>{h+=`<button data-el="${el}" data-b="${C[b]}" data-h="${C[hr]}" title="${R.EL[el].n} · ${b}${b!==hr?' / '+hr+' hair':''}" aria-label="${R.EL[el].n} ${b}"><canvas width="120" height="120"></canvas></button>`;});}
-  g.innerHTML=h;g.dataset.done=1;g.querySelectorAll('button').forEach(b=>{const c=b.firstChild.getContext('2d'),s={el:b.dataset.el,colors:{body:b.dataset.b,hair:b.dataset.h},x:60,y:60,scale:1,rotation:0},[w,hh]=R.dims(s);s.scale=Math.min(100/w,100/hh);R.drawEl(c,s,0);});}
+  h=`<h5>Stripes <i class="new">NEW</i></h5>`+[1,2,3].map(n=>`<button data-el="stripe" data-n="${n}" data-b="#ffffff" data-h="#ffffff" title="${['','Single','Double','Triple'][n]} stripe"><canvas width="120" height="120"></canvas></button>`).join('')+`<h5>Curved text <i class="new">NEW</i></h5><button class="badgeLib" data-badge="1" title="Badge">🏅 Badge</button>`+R.TEXTS.flatMap(t=>['script','round'].map(f=>`<button data-el="text" data-t="${t}" data-f="${f}" data-b="#ffffff" data-h="#ffffff" title="${t} · ${f}"><canvas width="120" height="120"></canvas></button>`)).join('')+h;g.innerHTML=h;g.dataset.done=1;g.querySelectorAll('button[data-el]').forEach(b=>{const c=b.firstChild.getContext('2d'),s={el:b.dataset.el,colors:{body:b.dataset.b,hair:b.dataset.h},x:60,y:60,scale:1,rotation:0,text:b.dataset.t,font:b.dataset.f,curve:b.dataset.t?120:0,lines:+b.dataset.n||1,thick:.3,len:110,spacing:b.dataset.f==='round'?4:0},[w,hh]=R.dims(s);s.scale=Math.min(100/w,100/hh);R.drawEl(c,s,0);});}
  $('#libZone').textContent=R.ZONES[zone].n.toLowerCase();$('#lib').hidden=false;}
 $('#stkBtn').onclick=openLib;$('#stkBtn2').onclick=openLib;$('#libClose').onclick=()=>$('#lib').hidden=true;
-$('#libGrid').onclick=e=>{const b=e.target.closest('[data-el]');if(!b)return;addSticker(b.dataset.el,{body:b.dataset.b,hair:b.dataset.h});$('#lib').hidden=true;toast('Stuck on '+R.ZONES[zone].n.toLowerCase());};
+$('#libGrid').onclick=e=>{if(e.target.closest('[data-badge]')){$('#lib').hidden=true;addBadge();return;}const b=e.target.closest('[data-el]');if(!b)return;if(b.dataset.el==='stripe'){const s=R.sticker('stripe',{body:R.C.White},zone,{lines:+b.dataset.n});s.z=zmax()+1;(D.zones[zone]=D.zones[zone]||[]).push(s);sid=s.id;commit();ui();}else if(b.dataset.el==='text'){const s=R.textSticker(b.dataset.t,b.dataset.f,120,{body:R.C.White},zone);s.z=zmax()+1;(D.zones[zone]=D.zones[zone]||[]).push(s);sid=s.id;commit();ui();}else addSticker(b.dataset.el,{body:b.dataset.b,hair:b.dataset.h});$('#lib').hidden=true;toast('Stuck on '+R.ZONES[zone].n.toLowerCase());};
 /* ---- profile + designer credit + review (file/link based; no accounts) ---- */
 function paintRole(){const m=me();$('#whoName').textContent=`${m.name} · ${m.role==='owner'?'Owner':'Designer'}`;
  $('#bSend').innerHTML=m.role==='owner'?'🚀<span> Send to JimmiBot</span>':'📨<span> Submit to Guy</span>';$('#bSend').title=m.role==='owner'?'Send to JimmiBot (Ctrl+S)':'Submit to Guy for review (Ctrl+S)';

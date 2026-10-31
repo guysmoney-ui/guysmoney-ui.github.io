@@ -115,3 +115,30 @@ v2 keeps every v1 field and adds the fields below. The app and `render_design.js
   
   Spacing is the gap between copies in canvas units. Copies shrink if they would overlap or overflow the band height.
 - **Leggings bundle:** `-mockup.png` (front and back), `-print-waistband.png`, `-print-waistband-back.png`, `-print-right-leg.png`, `-print-left-leg.png`, `-print-seat.png`
+
+## Classic → editor migration (Oct 31)
+Classic designs (no `editor` field) whose `garment` is `leggings`, `tee`, or `bottle` are migrated on load. This covers v1 files, inbox seeds, and starter cards.
+- `editor` is set to `"tee"` and `migratedFrom` to `"classic"`.
+- `logo` becomes an `el:"logo"` sticker with scale = old scale × 1.5.
+- `wordmark` becomes an `el:"word"` sticker with scale = old scale × 290/170, keeping its rotation.
+- Each sticker goes into the zone that contains its x/y on its `side`. Leggings use the same 600×800 canvas, so positions carry over exactly. On a tee, stickers are clamped into the front/back print rect.
+- `colors.stripe` / `stripeWidth` still render on leggings and print on the leg layers.
+- The original `logo` / `wordmark` fields are kept, so v1 readers still work. Joggers, hoodie, long sleeve and zip stay in the classic editor.
+
+## Curved text stickers (Oct 31, optional v2 addition)
+A sticker can be `el:"text"` with these extra fields:
+- `text` must be one of `"JIMMI"`, `"Jimmi"`, `"at the gym"`, `"Jimmi at the gym"`, `"Jimmi @ the gym"`. Any other value fails validation, and there is no free text.
+- `font` is `"script"` (Satisfy, close to the wordmark) or `"round"` (Comfortaa Bold, like JIMMI down the leg). Both are embedded in `fonts.js`, so they work offline and on file://.
+- `curve` is the degrees of arc, from -360 to 360. Positive values arch over the top, negative values make a smile underneath, and 0 is straight.
+- `spacing` is the letter spacing in logical units at size 1.
+- `colors.body` is the ink. `x`, `y`, `scale`, `rotation`, `z` and `group` work the same as on other stickers.
+
+The text is drawn as real canvas text along a circle with radius = arc length / angle, in both the mockup and the print layers. A **Badge** is a head sticker with `text:"Jimmi"` (script, +150) above it and `text:"at the gym"` (round, -130) below it, all sharing one `group`.
+
+## Stripe stickers (Oct 31, optional v2 addition)
+A sticker can be `el:"stripe"` with these extra fields:
+- `lines` is 1, 2 or 3 (single, double or triple).
+- `thick` is the thickness of each line in **inches**, from 1/32 (0.03125) to 2. Lines are converted at 244/12 ≈ 20.33 logical units per inch, the front-body scale, so 1/32″ is about 1 px in the editor.
+- `len` is the length in logical units, from 6 to 760.
+
+The gap between lines equals the line thickness, with a minimum of 1/16″. `scale`, `rotation`, `colors.body`, `x`, `y`, `z` and `group` work as usual. Length can be changed on its own with the Length slider or the corner drag handle, which stretches only along the stripe and leaves the thickness alone. Stripes added to a leg zone start at rotation 90 (running down the leg).

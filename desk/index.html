@@ -22,7 +22,7 @@
 <audio id="bgm" src="audio/jimmy-soft.mp3" loop preload="none" playsinline></audio>
 <main class="shop">
  <aside class="rack left">
-  <section data-tab="garment"><button id="teeBtn" class="wide teeBtn">👕 Tee Editor <small>(black tee, stickers, sleeves, back)</small></button><button id="legBtn" class="wide teeBtn">🩱 Leggings Editor <small>(waistband wrap, both legs, back)</small></button><h4>Garments rack</h4><div class="row" id="g"></div>
+  <section data-tab="garment"><button id="teeBtn" class="wide teeBtn">👕 Tee Editor <small>(black tee, stickers, sleeves, back)</small></button><button id="legBtn" class="wide teeBtn">🩱 Leggings Editor <small>(waistband wrap, both legs, back)</small></button><button id="hoodBtn" class="wide teeBtn">🧥 Hoodie Editor <small>(any color, stickers, sleeves, back · also long sleeve &amp; zip)</small></button><button id="botBtn" class="wide teeBtn">🥤 Bottle Editor <small>(24/28 oz shaker, front, back, lid)</small></button><h4>Garments rack</h4><div class="row" id="g"></div>
    <div class="legacy"><h4>View</h4><div class="row" id="view"></div></div>
    <h4>Start from an idea</h4><div class="starters" id="starters"></div><button id="surprise" class="wide">🎲 Surprise me</button></section>
   <section data-tab="inbox" class="subs"><div class="store-sign"><span class="neon2" id="subsSign">Submissions</span></div>
@@ -36,13 +36,23 @@
   <section data-tab="colors"><h4>Base color</h4><div class="row" id="base"></div>
    <div class="legacy"><h4>Logo color</h4><div class="row" id="logoc"></div><h4>Hair color</h4><div class="row" id="hairc"></div>
    <h4>Side stripe</h4><div class="row" id="st"></div><label class="sl">Stripe width <input type="range" id="sw" min="2" max="14" step="1"></label></div>
+   <div class="legsOnly"><h4>Side stripe</h4><div class="row" id="st2"></div><label class="sl">Stripe width <input type="range" id="sw2" min="2" max="14" step="1"></label></div>
+   <div class="botOnly"><h4>Bottle presets</h4><div class="row" id="botPre"></div><h4>Lid color</h4><div class="row" id="lidc"></div><h4>Size</h4><div class="row" id="botSize"></div></div>
    <div class="teeOnly"><h4>Sticker body / wordmark color</h4><div class="row" id="sBody"></div><h4>Sticker hair color</h4><div class="row" id="sHair"></div></div></section>
-  <section data-tab="place" class="teeOnly" id="teePanel"><h4>Print zone</h4><div class="row" id="zones"></div>
-   <button id="stkBtn2" class="wide">➕ Add from Sticker page</button>
+  <section data-tab="place" class="teeOnly" id="teePanel"><div class="notBot"><h4>Style (keeps your stickers)</h4><div class="row" id="teeStyle"></div></div><h4>Print zone</h4><div class="row" id="zones"></div>
+   <button id="stkBtn2" class="wide">➕ Add from Sticker page</button><button id="badgeBtn" class="wide">🏅 Badge: head + "Jimmi" arched above + "at the gym" below</button>
    <h4>Selected sticker: <span id="sName">none</span></h4>
    <label class="sl">Size <input type="range" id="sSize" min="0.1" max="3" step="0.01"></label>
    <label class="sl">Angle <span id="sAngV">0°</span> <input type="range" id="sAng" min="-180" max="180" step="1"></label>
    <div class="row" id="sActs"><button class="chip" data-a="dup">⧉ Duplicate</button><button class="chip" data-a="del">🗑 Delete</button><button class="chip" data-a="fwd">⬆ Forward</button><button class="chip" data-a="bwd">⬇ Back</button></div>
+   <div class="strOnly" id="strPanel"><h4>➖ Stripe</h4><div class="row" id="stLines"></div>
+   <label class="sl">Thickness <b id="stThV">1/4″</b> <input type="range" id="stTh" min="0" max="100" step="0.5"></label>
+   <label class="sl">Length <b id="stLenV">0″</b> <input type="range" id="stLen" min="6" max="760" step="1"></label>
+   <p class="hint">Drag the corner handle to stretch the length only · rotate to run it across, down a sleeve or down a leg.</p></div>
+   <div class="txtOnly" id="txtPanel"><h4>✍️ Curved text</h4><div class="row" id="tWord"></div><div class="row" id="tFont"></div>
+   <label class="sl">Curve <b id="tCurveV">0°</b> <input type="range" id="tCurve" min="-360" max="360" step="1"></label>
+   <label class="sl">Letter spacing <b id="tSpV">0</b> <input type="range" id="tSp" min="-6" max="30" step="1"></label>
+   <p class="hint">+ arches over the top · − curves underneath like a smile · brand words only.</p></div>
    <div class="rep" id="rep"><h4>🔁 Repeat / pattern</h4><div class="row" id="repMode"></div>
    <label class="sl">Count <b id="repNV">8</b> <input type="range" id="repN" min="2" max="24" step="1" value="8"></label>
    <label class="sl">Spacing <b id="repGV">10</b> <input type="range" id="repG" min="0" max="80" step="1" value="10"></label>
@@ -67,6 +77,6 @@
 <div class="modal" id="modal" hidden><div class="box"><div id="mBody"></div><button id="mClose" class="hot">Got it</button></div></div>
 <div class="drop" id="drop" hidden>Drop the .jimmi.json to load it</div>
 <div class="toast" id="toast"></div>
-<script src="assets.js"></script><script src="assets2.js"></script><script src="inbox/inbox.js"></script><script src="render.js"></script><script src="tee-render.js"></script><script src="app.js"></script>
+<script src="assets.js"></script><script src="assets2.js"></script><script src="fonts.js"></script><script src="inbox/inbox.js"></script><script src="render.js"></script><script src="tee-render.js"></script><script src="app.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{scope:"./"}));</script>
 </body></html>

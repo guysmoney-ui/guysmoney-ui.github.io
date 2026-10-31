@@ -93,3 +93,9 @@ body.tee #cv{max-height:calc(100vh - 210px)}@media (max-width:1000px){body.tee #
 .rep{margin-top:10px;padding:8px 10px;border:1px dashed #ff2bd666;border-radius:12px}
 .chip.hot{background:#ff2bd6;color:#fff}
 h5 .new{font-style:normal;background:#ffe14a;color:#0b0618;border-radius:6px;padding:0 5px;font-size:10px;margin-left:4px}
+body:not(.bottle) .botOnly{display:none!important}
+body:not(.legs) .legsOnly{display:none!important}
+body.bottle .notBot{display:none!important}
+body:not(.txtSel) .txtOnly{display:none!important}
+.badgeLib{font-size:15px;color:#fff}
+body:not(.strSel) .strOnly{display:none!important}

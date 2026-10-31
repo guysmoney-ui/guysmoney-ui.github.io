@@ -9,6 +9,7 @@ const G={
  tee:{n:'Tee',area:'DTG front/back print area 12″ × 16″',lp:['chest','left chest','back','hip'],wp:['under the logo','chest','none']},
  longsleeve:{n:'Long Sleeve',area:'DTG front/back 12″ × 16″ · sleeve approx.',lp:['chest','left chest','back','hip'],wp:['under the logo','chest','down the sleeve','none']},
  hoodie:{n:'Hoodie',area:'DTG front ~12″ × 10″ · back 12″ × 16″',lp:['chest','left chest','back'],wp:['under the logo','chest','down the sleeve','none']},
+ bottle:{n:'Shaker Bottle',editorOnly:1,area:'Bottle Editor only',lp:['front'],wp:['none']},
  zip:{n:'Zip Jacket',area:'Left-chest ~4″ × 4″ · back 12″ × 16″',lp:['left chest','back'],wp:['under the logo','down the sleeve','none']}};
 const LOGO_H=150,WORD_W=290;
 function logoPreset(g,p){const pants=G[g].pants;const t={hip:pants?[220,200,110]:[370,600,80],thigh:[230,345,170],calf:[240,585,150],waistband:pants?[300,107,46]:[300,660,40],back:pants?[300,240,170]:[300,360,240],chest:g==='hoodie'?[300,280,170]:[300,330,230],'left chest':[365,215,80]}[p]||[300,330,150];
@@ -66,7 +67,7 @@ function hit(d,x,y,view){const side=view||d.view;const t=(b)=>{const dx=x-b.x,dy
 /* render(d,{print,view,px}) -> canvas; px = output height (default 2000) */
 function render(d,o){o=o||{};const px=o.px||2000,k=px/800;const c=document.createElement('canvas');c.width=Math.round(600*k);c.height=px;const x=c.getContext('2d');x.scale(k,k);draw(x,d,{print:o.print,view:o.view,label:false});return c;}
 function ready(cb){const A=W.JIMMI_ASSETS;if(!W.JIMMI_IMG){W.JIMMI_IMG={};for(const k in A){const i=new Image();i.src=A[k];W.JIMMI_IMG[k]=i;}}
- Promise.all(Object.values(W.JIMMI_IMG).map(i=>i.decode?i.decode().catch(()=>{}):0)).then(cb);}
+ Promise.all(Object.values(W.JIMMI_IMG).map(i=>i.decode?i.decode().catch(()=>{}):0).concat([W.JIMMI_FONTS_READY||0])).then(cb);}
 function hexName(h){for(const k in C)if(C[k].toLowerCase()===(h||'').toLowerCase())return k;return h;}
 W.JimmiRender={_tint:tint,path,C,BASES,INKS,G,LOGO_H,WORD_W,logoPreset,wordPreset,make,validate,draw,render,hit,ready,hexName};
 })(window);
