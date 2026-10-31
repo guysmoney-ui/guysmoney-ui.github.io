@@ -88,8 +88,11 @@ const up=e=>{pts.delete(e.pointerId);if(pts.size<2){pinch=null;tp=null;}if(!pts.
 cv.addEventListener('wheel',e=>{e.preventDefault();if(tee()){const t=cur();if(t){t.scale=clampS(t.scale*(e.deltaY<0?1.05:1/1.05));draw();clearTimeout(cv._w);cv._w=setTimeout(()=>{commit();ui();},300);}return;}const o=el();o.scale=Math.max(.2,Math.min(2,o.scale*(e.deltaY<0?1.05:1/1.05)));draw();clearTimeout(cv._w);cv._w=setTimeout(()=>{commit();ui();},300);},{passive:false});
 /* ---- share link / open ---- */
 const b64u={enc:s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),dec:s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))))};
-function shareLink(){const base=location.protocol.startsWith('http')?location.origin+location.pathname:'https://guysmoney-ui.github.io/desk/';return base+'?d='+b64u.enc(JSON.stringify(D));}
-$('#bLink').onclick=async()=>{const u=shareLink();try{await navigator.clipboard.writeText(u);toast('Share link copied');}catch(_){prompt('Copy this link:',u);}};
+const zip={async enc(s){const cs=new CompressionStream('deflate-raw'),w=cs.writable.getWriter();w.write(new TextEncoder().encode(s));w.close();const u=new Uint8Array(await new Response(cs.readable).arrayBuffer());let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');},async dec(s){const b=atob(s.replace(/-/g,'+').replace(/_/g,'/')),u=Uint8Array.from(b,c=>c.charCodeAt(0));const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(u);w.close();return await new Response(ds.readable).text();}};
+function linkPartner(){if(typeof SET!=='undefined'&&SET){const k=SET.active==='top'?'bottom':'top';return SET[k];}if(D.pair){const p=getSaved().find(x=>x.id===D.pair.id);if(p)return p.design;}return null;}
+async function shareLink(){const base=location.protocol.startsWith('http')?location.origin+location.pathname:'https://guysmoney-ui.github.io/desk/';const P=linkPartner();if(!P||typeof CompressionStream==='undefined')return base+'?d='+b64u.enc(JSON.stringify(D));const pay={schema:'jimmi.link',v:2,a:D,b:P,set:!!(typeof SET!=='undefined'&&SET)};return base+'?z='+await zip.enc(JSON.stringify(pay));}
+async function openLinkParam(sp){const z=sp.get('z'),d=sp.get('d');if(z){const o=JSON.parse(await zip.dec(z));if(o&&o.schema==='jimmi.link'&&o.b){const A=R.upgrade(o.a),B=R.upgrade(o.b);const isTop=x=>!R.isLegs(x)&&x.garment!=='bottle';if(isTop(A)!==isTop(B)){const top=isTop(A)?A:B,bot=isTop(A)?B:A;for(const x of [top,bot]){x.colors.stripeWidth=x.colors.stripeWidth||7;x.view=x.view||'front';}enterSet(top,bot,isTop(A)?'top':'bottom');ui();toast('👯 Opened set from link: '+top.name+' + '+bot.name);return true;}load(o.a,'Opened design from link');return true;}load(o.a||o,'Opened design from link');return true;}if(d){load(JSON.parse(b64u.dec(d)),'Opened design from link');return true;}return false;}
+$('#bLink').onclick=async()=>{const u=await shareLink();try{await navigator.clipboard.writeText(u);toast('Share link copied');}catch(_){prompt('Copy this link:',u);}};
 function readFile(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{load(JSON.parse(r.result),'Opened '+f.name);}catch(_){toast('That file is not a valid .jimmi.json');}};r.readAsText(f);}
 $('#bOpen').onclick=()=>$('#file').click();$('#file').onchange=e=>{readFile(e.target.files[0]);e.target.value='';};
 let dc=0;addEventListener('dragenter',e=>{e.preventDefault();dc++;$('#drop').hidden=false;});addEventListener('dragleave',()=>{if(--dc<=0){dc=0;$('#drop').hidden=true;}});
@@ -225,15 +228,15 @@ async function shareOut(fs,title,text,mail){window.__lastSent=fs.map(f=>f.name);
  if(touch&&navigator.canShare&&navigator.canShare({files:fs})){try{await navigator.share({files:fs,title,text});toast('Shared!');return 'shared';}catch(e){if(e.name==='AbortError')return 'aborted';}}
  dl(fs);modal(`<h2 class="neon" style="font-size:30px">${esc(title)}</h2><p>Saved ${fs.length} files to Downloads:</p><ul>${fs.map(f=>`<li><code>${f.name}</code></li>`).join('')}</ul><p><a class="hot mail" id="mailLink" href="${mail}" style="display:inline-block;padding:10px 16px;border-radius:99px;color:#fff;text-decoration:none">✉️ Email the link</a></p><p class="hint">Attach the downloaded files to the email if you like; the link alone reopens the design.</p>`);return 'downloaded';}
 async function submit(){if(isOwner()){toast('Owner mode: use Send to JimmiBot');return;}const was=D.status;D.designer=me();D.author=me().name;D.status='submitted';if(was==='rejected'||was==='needs-tweak'||was==='resubmitted')D.status='resubmitted';hist(D.status==='resubmitted'?'resubmitted':'submitted');commit();ui();
- const fs=await bundle(['mockup']),link=shareLink(),sub=`Jimmi design for review: ${D.name} (designs by ${me().name})`;
+ const fs=await bundle(['mockup']),link=await shareLink(),sub=`Jimmi design for review: ${D.name} (designs by ${me().name})`;
  return shareOut(fs,'Submitted to Guy',`${sub}\n${link}`,`mailto:guysmoney@gmail.com?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(`Hey Guy, here's my Jimmi design for review:\n${link}\n\n— ${me().name}`)}`);}
 async function approve(notes){if(!isOwner())return;D.status='approved';if(notes)D.reviewNotes=notes;hist('approved',notes||'');commit();ui();await sendBot();}
 function tweakBox(pre){if(!isOwner())return;modal(`<h2 class="neon" style="font-size:28px">🔧 Needs tweaking</h2><p>Tell ${esc((D.designer||{}).name||'the designer')} what to change. They'll see this on the design.</p><textarea id="twNotes" rows="4" style="width:100%">${esc(pre||'')}</textarea><div class="acts"><button class="tw" id="twGo">🔧 Send back for tweaks</button></div>`);const t=$('#twNotes');t.focus();$('#twGo').onclick=()=>{const v=t.value.trim();if(!v){toast('Add notes so the designer knows what to tweak');t.focus();return;}$('#modal').hidden=true;needsTweak(v);};}
 async function needsTweak(notes){if(!isOwner())return false;notes=(notes||'').trim();if(!notes)return false;
- D.status='needs-tweak';D.reviewNotes=notes;hist('needs tweaking',notes);commit();ui();const fs=await bundle(['mockup']),link=shareLink(),sub=`Jimmi design needs tweaking: ${D.name}`;
+ D.status='needs-tweak';D.reviewNotes=notes;hist('needs tweaking',notes);commit();ui();const fs=await bundle(['mockup']),link=await shareLink(),sub=`Jimmi design needs tweaking: ${D.name}`;
  await shareOut(fs,'Sent to '+((D.designer||{}).name||'designer')+' for tweaks',`${sub}\nNotes: ${notes}\n${link}`,`mailto:?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(`Needs tweaking — notes from Guy: ${notes}\n\nOpen, tweak and resubmit:\n${link}`)}`);return true;}
 async function reject(notes){if(!isOwner())return false;notes=(notes||'').trim();if(!notes){toast('Add notes so the designer knows what to fix');const t=$('#rvNotes');if(t)t.focus();return false;}
- D.status='rejected';D.reviewNotes=notes;hist('rejected',notes);commit();ui();const fs=await bundle(['mockup']),link=shareLink(),sub=`Jimmi design sent back: ${D.name}`;
+ D.status='rejected';D.reviewNotes=notes;hist('rejected',notes);commit();ui();const fs=await bundle(['mockup']),link=await shareLink(),sub=`Jimmi design sent back: ${D.name}`;
  await shareOut(fs,'Sent back to '+((D.designer||{}).name||'designer'),`${sub}\nNotes: ${notes}\n${link}`,`mailto:?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(`Notes from Guy: ${notes}\n\nOpen, revise and resubmit:\n${link}`)}`);return true;}
 function setProfile(p){PROF={role:p.role==='designer'?'designer':'owner',name:(p.name||'').trim().slice(0,40)||(p.role==='designer'?'Designer':'Guy')};localStorage.setItem('jimmiProfile',JSON.stringify(PROF));
  if(D.status==='draft'&&!(D.history||[]).some(h=>h.action!=='created'))D.designer=me();rvKey='';ui();}
@@ -245,7 +248,7 @@ function profileModal(first){let role=me().role;const paint=()=>{$('#mBody').inn
  paint();$('#modal').hidden=false;$('#mClose').textContent='Save';$('#mClose').onclick=()=>{setProfile({role,name:$('#pName').value});$('#modal').hidden=true;$('#mClose').textContent='Got it';$('#mClose').onclick=()=>$('#modal').hidden=true;toast('Designing as '+me().name);};}
 $('#bProf').onclick=()=>profileModal(false);
 $('#rOpen').onclick=()=>$('#file').click();
-$('#rLink').onclick=()=>{const u=prompt('Paste the design link (…/desk/?d=…):');if(!u)return;try{const q=new URL(u.trim()).searchParams.get('d');load(JSON.parse(b64u.dec(q)),'Opened design from link');}catch(_){toast('That link has a broken design');}};
+$('#rLink').onclick=()=>{const u=prompt('Paste the design link (…/desk/?d=…):');if(!u)return;(async()=>{try{if(!await openLinkParam(new URL(u.trim()).searchParams))throw 0;}catch(_){toast('That link has a broken design');}})();};
 /* ---- music (off by default on desktop) ---- */
 const bgm=$('#bgm');let music=localStorage.getItem('jimmiDeskMusic')==='1';
 function paintM(){$('#bMusic').textContent=music?'🔊':'🔇';$('#bMusic').title=music?'Mute music (M)':'Play soft music (M)';}
@@ -343,12 +346,12 @@ function paintMir(){const b=$('#mirBtn');b.hidden=!hasPairs();b.classList.toggle
 $('#mirBtn').onclick=()=>{if(D.mirror){delete D.mirror;for(const a of Object.values(D.zones||{}))(a||[]).forEach(s=>delete s.mir);toast('🪞 Mirror off — both sides are now independent');}else{D.mirror=true;toast('🪞 Mirror on — changes copy to the opposite side');}commit();ui();};
 const _uiM=ui;ui=function(){_uiM.apply(this,arguments);paintMir();const tb=$('#tweakStage');const on=D.status==='needs-tweak'&&D.reviewNotes&&!isOwner();tb.hidden=!on;if(on)tb.innerHTML='🔧 <b>Needs tweaking</b> — notes from Guy: '+esc(D.reviewNotes)+' <small>· edit, then tap Submit to Guy</small>';};
 /* ---- boot ---- */
-R.ready(()=>{paintInbox();paintSaved();if(!PROF)setTimeout(()=>profileModal(true),50);const q=new URLSearchParams(location.search).get('d')||new URLSearchParams(location.hash.slice(1)).get('d');
- if(q){try{load(JSON.parse(b64u.dec(q)),'Opened design from link');undo=[];}catch(_){toast('That link has a broken design');}}
- ui();window.__jimmiReady=true;});
+R.ready(()=>{paintInbox();paintSaved();if(!PROF)setTimeout(()=>profileModal(true),50);const sp=new URLSearchParams(location.search),hp=new URLSearchParams(location.hash.slice(1));const lp=(sp.get('z')||sp.get('d'))?sp:hp;
+ ui();if(lp.get('z')||lp.get('d')){window.__jimmiReady=false;openLinkParam(lp).then(()=>{undo=[];}).catch(()=>toast('That link has a broken design')).finally(()=>{ui();window.__jimmiReady=true;});}
+ else{ui();window.__jimmiReady=true;}});
 /* ---- 🎯 Center selected element in its print zone ---- */
 function centerSel(){const s=cur();if(!s){toast('🎯 Select a sticker or stripe first');return false;}const r=R.ZONES[zone]&&R.ZONES[zone].rect;if(!r)return false;const [x,y,w,h]=r;s.x=x+w/2;s.y=y+h/2;if(s.placement)s.placement='custom';commit();ui();toast('🎯 Centered in '+(R.ZONES[zone].label||zone));return true;}
 $('#ctrBtn').onclick=centerSel;
 const _uiC=ui;ui=function(){_uiC.apply(this,arguments);const b=$('#ctrBtn');if(b)b.disabled=!cur();};
-if(window.__jimmi)window.__jimmi.center=centerSel;
+if(window.__jimmi){window.__jimmi.center=centerSel;window.__jimmi.shareLink=shareLink;window.__jimmi.set=()=>SET?{top:SET.active==='top'?D:SET.top,bottom:SET.active==='bottom'?D:SET.bottom,active:SET.active}:null;}
 })();
