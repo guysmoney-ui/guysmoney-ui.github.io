@@ -10,7 +10,7 @@ const snap=()=>JSON.stringify(D);let last=snap();
 function commit(){const s=snap();if(s===last)return;undo.push(last);if(undo.length>200)undo.shift();redo=[];last=s;D.updated=new Date().toISOString();}
 function load(d,msg){const e=R.validate(d);if(e.length){toast('Could not open: '+e[0]);return false;}
  d=R.upgrade(d);d.colors.stripeWidth=d.colors.stripeWidth||7;d.view=d.view||'front';d.logo.side=d.logo.side||'front';d.wordmark.side=d.wordmark.side||'front';
- undo.push(last);redo=[];D=d;last=snap();if(tee()){zone=D.garment==='bottle'?(D.view==='back'?'bottleBack':'bottleFront'):(D.garment==='leggings'||D.garment==='joggers')?(D.view==='back'?'waistbandBack':'waistband'):(D.view==='back'?'back':'front');sid=null;}
+ undo.push(last);redo=[];D=d;last=snap();if(tee()){zone=D.garment==='bottle'?(D.view==='back'?'bottleBack':'bottleFront'):R.isLegs(D)?R.bandOf(D,D.view==='back'):(D.view==='back'?'back':'front');sid=null;}
  if(isOwner()&&D.status==='submitted'){msg='Submission from '+((D.designer||{}).name||'a designer')+' — review it in Submissions';showTab('inbox');setTimeout(()=>{const x=document.querySelector('.subs');if(x)x.scrollIntoView({block:'start'});},60);}
  else if(!isOwner()&&D.status==='rejected'){msg='Guy sent this back: revise and resubmit';}
  ui();if(msg)toast(msg);return true;}
@@ -30,11 +30,33 @@ function paintInbox(){$('#inbox').innerHTML=INBOX.map((x,i)=>`<button data-i="${
 $('#inbox').onclick=async e=>{const b=e.target.closest('[data-i]');if(!b)return;const x=INBOX[b.dataset.i];let d=x.design;
  if(location.protocol.startsWith('http')){try{d=await (await fetch('inbox/'+x.file,{cache:'no-store'})).json();}catch(_){}}load(d,'Loaded '+x.name+' from JimmiBot');};
 if(location.protocol.startsWith('http'))fetch('inbox/index.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{INBOX=j.designs.map(x=>({...x,design:(INBOX.find(y=>y.file===x.file)||{}).design}));paintInbox();}).catch(()=>{});
+/* ---- save to My Designs (localStorage, works on file://) ---- */
+const SK='jimmiDesigns';const getSaved=()=>{try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(_){return [];}};
+function paintSaved(){const L=getSaved();$('#saved').innerHTML=L.map((x,i)=>`<button data-i="${i}" style="--a:${esc(x.base||'#000')};--b:#19c37d"><i></i><span><b>${esc(x.name)}</b><small>${esc(x.kind)} · ${new Date(x.at).toLocaleString()}</small>${x.design.pair?`<span class="pairb">🔗 Paired with ${esc(x.design.pair.name)}</span>`:''}</span>${x.design.pair?`<span class="chip setopen" data-set="${i}" title="Open both as a set">👯 Open as set</span><span class="chip del" data-unpair="${i}" title="Unpair">✂ Unpair</span>`:''}<span class="chip del" data-del="${i}" title="Delete">🗑</span></button>`).join('')||'<p class="hint">Nothing saved yet. Hit 💾 Save.</p>';}
+function saveDesign(){commit();D.updated=new Date().toISOString();if(!D.saveId)D.saveId='d'+Date.now().toString(36);const L=getSaved().filter(x=>x.id!==D.saveId);
+ const kind=(D.garment&&G[D.garment]?G[D.garment].n:D.garment)||D.editor||'design';
+ const nm=D.name||('My '+kind);if(D.pair){const p=L.find(x=>x.id===D.pair.id);if(p&&p.design.pair&&p.design.pair.id===D.saveId){p.design.pair.name=nm;}}
+ L.unshift({id:D.saveId,name:nm,kind,base:(D.colors||{}).base,at:D.updated,design:JSON.parse(JSON.stringify(D))});
+ try{localStorage.setItem(SK,JSON.stringify(L));}catch(e){toast('Save failed: storage full');return;}last=snap();paintSaved();
+ const b=$('#bSave');b.classList.add('done');b.innerHTML='✓<span> Saved ✓</span>';clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('done');b.innerHTML='💾<span> Save</span>';},2500);toast('Saved ✓ — find it in Inbox › 📂 Your designs');}
+$('#bSave').onclick=()=>SET?saveSet():saveDesign();
+function unpair(id){const L=getSaved();const a=L.find(x=>x.id===id);if(!a||!a.design.pair)return;const b=L.find(x=>x.id===a.design.pair.id);if(b&&b.design.pair&&b.design.pair.id===id)delete b.design.pair;delete a.design.pair;localStorage.setItem(SK,JSON.stringify(L));if(D.saveId&&(D.saveId===id||(b&&D.saveId===b.id))){delete D.pair;last=snap();}paintSaved();toast('Unpaired');}
+function pairWith(pid){if(!D.saveId||!getSaved().some(x=>x.id===D.saveId))saveDesign();const L=getSaved();const a=L.find(x=>x.id===D.saveId),b=L.find(x=>x.id===pid);if(!a||!b)return;
+ for(const x of [a,b])if(x.design.pair)unpair(x.id);const L2=getSaved();const A=L2.find(x=>x.id===a.id),B=L2.find(x=>x.id===b.id);const setId='set-'+Date.now().toString(36);
+ A.design.pair={id:B.id,name:B.name,kind:B.kind,setId};B.design.pair={id:A.id,name:A.name,kind:A.kind,setId};localStorage.setItem(SK,JSON.stringify(L2));D.pair=A.design.pair;last=snap();paintSaved();
+ $('#modal').hidden=true;toast('🔗 Paired with '+B.name+' — sold as a set, each still buyable alone');}
+$('#bPair').onclick=()=>{const L=getSaved().filter(x=>x.id!==D.saveId);if(!L.length){modal('<h2>Pair with…</h2><p>Save another design first (💾 Save), then pair it.</p>');return;}
+ modal(`<h2 class="neon" style="font-size:28px">🔗 Pair with…</h2><p>Pick a saved design to sell with this one as a matching set.${D.pair?` Currently paired with <b>${esc(D.pair.name)}</b>.`:''}</p><div class="pick" id="pick">${L.map(x=>`<button data-p="${x.id}" style="border-left:14px solid ${esc(x.base||'#000')}"><b>${esc(x.name)}</b> <small>${esc(x.kind)}</small>${x.design.pair?' <small>(paired with '+esc(x.design.pair.name)+')</small>':''}</button>`).join('')}</div>`);
+ $('#pick').onclick=e=>{const b=e.target.closest('[data-p]');if(b)pairWith(b.dataset.p);};};
+
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='S'||e.key==='s')){e.preventDefault();e.stopImmediatePropagation();SET?saveSet():saveDesign();}},true);
+$('#saved').onclick=e=>{const L=getSaved();const so=e.target.closest('[data-set]');if(so){e.stopPropagation();openSet(L[+so.dataset.set]);return;}const u=e.target.closest('[data-unpair]');if(u){e.stopPropagation();unpair(L[+u.dataset.unpair].id);return;}const d=e.target.closest('[data-del]');if(d){e.stopPropagation();if(confirm('Delete this saved design?')){unpair(L[+d.dataset.del].id);const L3=getSaved().filter(x=>x.id!==L[+d.dataset.del].id);localStorage.setItem(SK,JSON.stringify(L3));paintSaved();}return;}
+ const b=e.target.closest('[data-i]');if(!b)return;const x=L[b.dataset.i];if(x)load(JSON.parse(JSON.stringify(x.design)),'Opened '+x.name);};
 /* ---- UI ---- */
 function ui(){const g=G[D.garment];document.body.classList.toggle('tee',tee());paintTee();paintReview();paintRole();
  chips('#g',Object.keys(G).filter(k=>!G[k].editorOnly),D.garment,k=>G[k].n);chips('#view',['front','back'],D.view,v=>v==='front'?'Front':'Back');
  swatches('#base',R.BASES,D.colors.base);swatches('#logoc',R.INKS,D.colors.logo);swatches('#hairc',R.INKS,D.colors.hair);
- swatches('#st',R.INKS.slice(0,8),D.colors.stripe,`<button class="chip${D.colors.stripe?'':' on'}" data-v="none">None</button>`);
+ swatches('#st',R.INKS.filter((n,i)=>i<8||i>11),D.colors.stripe,`<button class="chip${D.colors.stripe?'':' on'}" data-v="none">None</button>`);
  chips('#lp',g.lp,D.logo.placement);chips('#wp',g.wp,D.wordmark.hidden?'none':D.wordmark.placement);chips('#selRow',['logo','word'],sel,v=>v==='logo'?'Buff Jimmi logo':'Wordmark');
  $('#selName').textContent=sel==='logo'?'Logo':'Wordmark';
  $('#ls').value=D.logo.scale;$('#ws').value=D.wordmark.scale;$('#wr').value=D.wordmark.rotation||0;$('#sw').value=D.colors.stripeWidth||7;
@@ -43,7 +65,7 @@ function ui(){const g=G[D.garment];document.body.classList.toggle('tee',tee());p
 function draw(){if(tee())return drawT();R.draw(ctx,D,{sel});$('#cap').textContent='Dashed line = print area · '+G[D.garment].area+' · preview is approximate';
  $('#spec').textContent=`${G[D.garment].n} · base ${R.hexName(D.colors.base)}\nlogo ${R.hexName(D.colors.logo)} / hair ${R.hexName(D.colors.hair)} @ ${D.logo.side} ${Math.round(D.logo.x)},${Math.round(D.logo.y)} ×${(+D.logo.scale).toFixed(2)}\nwordmark ${D.wordmark.hidden?'none':`${D.wordmark.side} ${Math.round(D.wordmark.x)},${Math.round(D.wordmark.y)} ×${(+D.wordmark.scale).toFixed(2)} ${Math.round(D.wordmark.rotation)}°`}\nstripe ${D.colors.stripe?R.hexName(D.colors.stripe)+' '+D.colors.stripeWidth+'px':'none'}`;}
 const on=(id,fn)=>$(id).addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b){fn(b.dataset.v);commit();ui();}});
-on('#g',v=>{const n=R.make({designer:D.designer,garment:v,base:D.colors.base,logo:D.colors.logo,hair:D.colors.hair,stripe:D.colors.stripe,name:D.name,notes:D.notes,author:D.author});n.colors.stripeWidth=D.colors.stripeWidth;n.created=D.created;D=R.upgrade(n);if(tee()){zone=(D.garment==='leggings'||D.garment==='joggers')?'waistband':'front';sid=null;}});
+on('#g',v=>{const n=R.make({designer:D.designer,garment:v,base:D.colors.base,logo:D.colors.logo,hair:D.colors.hair,stripe:D.colors.stripe,name:D.name,notes:D.notes,author:D.author});n.colors.stripeWidth=D.colors.stripeWidth;n.created=D.created;D=R.upgrade(n);if(tee()){zone=R.isLegs(D)?R.bandOf(D,0):'front';sid=null;}});
 on('#view',v=>D.view=v);on('#base',v=>D.colors.base=v);on('#logoc',v=>{D.colors.logo=v;D.colors.hair=v;});on('#hairc',v=>D.colors.hair=v);on('#st',v=>D.colors.stripe=v==='none'?null:v);
 on('#lp',v=>{D.logo=R.logoPreset(D.garment,v);D.view=D.logo.side;sel='logo';if(D.wordmark.placement==='under the logo')D.wordmark=R.wordPreset(D.garment,'under the logo',D.logo);});
 on('#wp',v=>{D.wordmark=R.wordPreset(D.garment,v,D.logo);sel='word';if(!D.wordmark.hidden)D.view=D.wordmark.side;});
@@ -78,7 +100,7 @@ const slug=()=>(D.name||'jimmi').toLowerCase().replace(/[^a-z0-9]+/g,'-').replac
 const blob=c=>new Promise(r=>c.toBlob(r,'image/png'));
 async function bundle(only){D.updated=new Date().toISOString();const s=slug();const out=[new File([JSON.stringify(D,null,2)],s+'.jimmi.json',{type:'application/json'})];
  for(const x of R.exportsOf(D,{px:2000})){if(only&&!only.includes(x.suffix))continue;out.push(new File([await blob(x.canvas)],s+'-'+x.suffix+'.png',{type:'image/png'}));}return out;}
-window.__jimmi={addStripe:(z,o)=>{zone=z;const s=R.sticker('stripe',{body:o.color||'#ffffff'},z,o);s.z=zmax()+1;(D.zones[z]=D.zones[z]||[]).push(s);sid=s.id;const Z=R.ZONES[z];if(Z.view&&Z.view!==D.view)D.view=Z.view;commit();ui();return s.id;},badge:()=>addBadge(),addText:(t,f,c,col)=>{const s=R.textSticker(t,f,c,{body:col||'#ffffff'},zone);s.z=zmax()+1;(D.zones[zone]=D.zones[zone]||[]).push(s);sid=s.id;commit();ui();return s.id;},repeat:(m,c,g)=>doRepeat(m,c,g),newBottle:()=>$('#botBtn').click(),newLeggings:()=>$('#legBtn').click(),select:(z,id)=>{zone=z;sid=id;const Z=R.ZONES[z];if(Z.view&&Z.view!==D.view)D.view=Z.view;ui();},openLib:()=>openLib(),get:()=>D,load,bundle,shareLink,undo:doUndo,redo:doRedo,state:()=>({zone,sid}),selectZone:z=>{zone=z;sid=null;ui();},addSticker:(el,c)=>addSticker(el,c),flip:()=>flip(),commit:()=>{commit();ui();},submit:()=>submit(),approve:()=>approve(),reject:n=>reject(n),setProfile:p=>setProfile(p),lastSent:()=>window.__lastSent};
+window.__jimmi={newShorts:()=>$('#shortsBtn').click(),addStripe:(z,o)=>{zone=z;const s=R.sticker('stripe',{body:o.color||'#ffffff'},z,o);s.z=zmax()+1;(D.zones[z]=D.zones[z]||[]).push(s);sid=s.id;const Z=R.ZONES[z];if(Z.view&&Z.view!==D.view)D.view=Z.view;commit();ui();return s.id;},badge:()=>addBadge(),addText:(t,f,c,col)=>{const s=R.textSticker(t,f,c,{body:col||'#ffffff'},zone);s.z=zmax()+1;(D.zones[zone]=D.zones[zone]||[]).push(s);sid=s.id;commit();ui();return s.id;},repeat:(m,c,g)=>doRepeat(m,c,g),newBottle:()=>$('#botBtn').click(),newLeggings:()=>$('#legBtn').click(),select:(z,id)=>{zone=z;sid=id;const Z=R.ZONES[z];if(Z.view&&Z.view!==D.view)D.view=Z.view;ui();},openLib:()=>openLib(),get:()=>D,load,bundle,shareLink,undo:doUndo,redo:doRedo,state:()=>({zone,sid}),selectZone:z=>{zone=z;sid=null;ui();},addSticker:(el,c)=>addSticker(el,c),flip:()=>flip(),commit:()=>{commit();ui();},submit:()=>submit(),approve:()=>approve(),reject:n=>reject(n),setProfile:p=>setProfile(p),lastSent:()=>window.__lastSent};
 const dl=fs=>fs.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);},i*400));
 const touch=matchMedia('(max-width:1000px), (pointer:coarse)').matches;
 $('#bSend').onclick=()=>isOwner()?sendBot():submit();
@@ -94,12 +116,12 @@ const clampS=v=>Math.max(.1,Math.min(3,v));const normA=a=>{a=((a+180)%360+360)%3
 const mirrored=()=>R.toScreen(zone,D.view,{x:0,rotation:1}).rotation===-1;
 function clampPos(s){const [x,y,w,h]=R.ZONES[zone].rect;s.x=Math.max(x,Math.min(x+w,s.x));s.y=Math.max(y,Math.min(y+h,s.y));}
 function drawT(){R.drawTee(ctx,D,{zone,sel:sid});const Z=R.ZONES[zone];
- $('#cap').textContent=`${(D.garment==='leggings'||D.garment==='joggers')?'Leggings · ':''}Selected zone: ${Z.n} (${Z.inch[0]}″ × ${Z.inch[1]}″ print) · tap another zone to switch · preview is approximate`;
+ $('#cap').textContent=`${R.isLegs(D)?G[D.garment].n+' · ':''}Selected zone: ${Z.n} (${Z.inch[0]}″ × ${Z.inch[1]}″ print) · tap another zone to switch · preview is approximate`;
  const cnt=R.zk(D).map(k=>`${R.ZONES[k].n}: ${(D.zones[k]||[]).length}`).join(' · ');const s=cur();
- $('#spec2').textContent=`${(D.garment==='leggings'||D.garment==='joggers')?'Leggings':'Tee'} · base ${R.hexName(D.colors.base)}\n${cnt}${s?`\nselected: ${R.EL[s.el].n} @ ${Math.round(s.x)},${Math.round(s.y)} ×${s.scale.toFixed(2)} ${Math.round(s.rotation)}°`:''}${D.designer&&D.designer.name?'\ndesigns by '+D.designer.name:''}`;
+ $('#spec2').textContent=`${G[D.garment].n} · base ${R.hexName(D.colors.base)}\n${cnt}${s?`\nselected: ${R.EL[s.el].n} @ ${Math.round(s.x)},${Math.round(s.y)} ×${s.scale.toFixed(2)} ${Math.round(s.rotation)}°`:''}${D.designer&&D.designer.name?'\ndesigns by '+D.designer.name:''}`;
  $('#spec').textContent=$('#spec2').textContent;}
-function paintTee(){document.body.classList.toggle('bottle',D.garment==='bottle');document.body.classList.toggle('legs',tee()&&(D.garment==='leggings'||D.garment==='joggers'));if(tee()&&(D.garment==='leggings'||D.garment==='joggers')){swatches('#st2',R.INKS.slice(0,8),D.colors.stripe,`<button class="chip${D.colors.stripe?'':' on'}" data-v="none">None</button>`);$('#sw2').value=D.colors.stripeWidth||7;}if(!tee())return;if(D.garment==='bottle'){$('#botPre').innerHTML=R.BP.map(([b,l])=>`<button class="chip${D.colors.base===C[b]&&D.colors.lid===C[l]?' on':''}" data-v="${b}|${l}"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${C[b]};border:2px solid ${C[l]}"></i> ${b} / ${l}</button>`).join('');swatches('#lidc',R.INKS.concat(['Black','Navy']).filter((v,i,a)=>a.indexOf(v)===i),D.colors.lid);chips('#botSize',['24','28'],String(D.size||24),v=>v+' oz');}const s=cur();
- {const T=['tee','longsleeve','hoodie','zip'],L=['leggings','joggers'],arr=T.includes(D.garment)?T:L.includes(D.garment)?L:[];chips('#teeStyle',arr,D.garment,k=>G[k].n);}paintTxt();paintRep();chips('#zones',R.zk(D),zone,k=>R.ZONES[k].n);$('#flipLab').textContent=D.view==='back'?'Back':'Front';$('#flip').firstChild.textContent=D.garment==='bottle'?'⟲ Turn: ':'⟲ Flip: ';
+function paintTee(){document.body.classList.toggle('bottle',D.garment==='bottle');document.body.classList.toggle('legs',tee()&&R.isLegs(D));if(tee()&&R.isLegs(D)){swatches('#st2',R.INKS.filter((n,i)=>i<8||i>11),D.colors.stripe,`<button class="chip${D.colors.stripe?'':' on'}" data-v="none">None</button>`);$('#sw2').value=D.colors.stripeWidth||7;}if(!tee())return;if(D.garment==='bottle'){$('#botPre').innerHTML=R.BP.map(([b,l])=>`<button class="chip${D.colors.base===C[b]&&D.colors.lid===C[l]?' on':''}" data-v="${b}|${l}"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${C[b]};border:2px solid ${C[l]}"></i> ${b} / ${l}</button>`).join('');swatches('#lidc',R.INKS.concat(['Black','Navy']).filter((v,i,a)=>a.indexOf(v)===i),D.colors.lid);chips('#botSize',['24','28'],String(D.size||24),v=>v+' oz');}const s=cur();
+ {const T=['tee','longsleeve','hoodie','zip'],L=['leggings','joggers','shorts'],arr=T.includes(D.garment)?T:L.includes(D.garment)?L:[];chips('#teeStyle',arr,D.garment,k=>G[k].n);}paintTxt();paintRep();chips('#zones',R.zk(D),zone,k=>R.ZONES[k].n);$('#flipLab').textContent=D.view==='back'?'Back':'Front';$('#flip').firstChild.textContent=D.garment==='bottle'?'⟲ Turn: ':'⟲ Flip: ';
  $('#sName').textContent=s?R.EL[s.el].n:'none — tap a sticker';['#sSize','#sAng'].forEach(i=>$(i).disabled=!s);[...$('#sActs').children].forEach(b=>b.disabled=!s);
  if(s){$('#sSize').value=s.scale;$('#sAng').value=s.rotation||0;$('#sAngV').textContent=Math.round(s.rotation||0)+'°';}
  swatches('#sBody',R.INKS,s?s.colors.body:'');swatches('#sHair',R.INKS,s?s.colors.hair:'');
@@ -140,10 +162,10 @@ function tKey(e){const k=e.key,s=cur();if(e.ctrlKey||e.metaKey)return false;
  if(hit){e.preventDefault();clampPos(s);commit();ui();}return !!hit;}
 let flipping=false;
 async function flip(){if(flipping)return;flipping=true;const T=(a,b)=>cv.animate([{transform:`perspective(1200px) rotateY(${a}deg)`},{transform:`perspective(1200px) rotateY(${b}deg)`}],{duration:200,easing:'ease-in-out'}).finished;
- try{await T(0,90);}catch(_){}D.view=D.view==='back'?'front':'back';if(D.garment==='bottle'){if(!R.ZONES[zone].lid&&R.ZONES[zone].view!==D.view){zone=D.view==='back'?'bottleBack':'bottleFront';sid=null;}}else if((D.garment==='leggings'||D.garment==='joggers')){if(R.ZONES[zone].view!==D.view){zone=D.view==='back'?'waistbandBack':'waistband';sid=null;}}else if(!R.ZONES[zone].sleeve){zone=D.view;sid=null;}commit();ui();try{await T(-90,0);}catch(_){}flipping=false;}
+ try{await T(0,90);}catch(_){}D.view=D.view==='back'?'front':'back';if(D.garment==='bottle'){if(!R.ZONES[zone].lid&&R.ZONES[zone].view!==D.view){zone=D.view==='back'?'bottleBack':'bottleFront';sid=null;}}else if(R.isLegs(D)){if(R.ZONES[zone].view!==D.view){zone=R.bandOf(D,D.view==='back');sid=null;}}else if(!R.ZONES[zone].sleeve){zone=D.view;sid=null;}commit();ui();try{await T(-90,0);}catch(_){}flipping=false;}
 $('#flip').onclick=flip;
 on('#st2',v=>D.colors.stripe=v==='none'?null:v);slide('#sw2',v=>D.colors.stripeWidth=v);$('#st2').addEventListener('change',e=>{if(e.target.type==='color'){D.colors.stripe=e.target.value;commit();ui();}});
-on('#teeStyle',v=>{D.garment=v;});
+on('#teeStyle',v=>{const k=R.zk(D).indexOf(zone);R.restyle(D,v);zone=R.zk(D)[k]||(R.isLegs(D)?R.bandOf(D,0):D.view);if(!(D.zones[zone]||[]).some(q=>q.id===sid))sid=null;});
 $('#hoodBtn').onclick=()=>{const n=R.makeEditor('hoodie',{designer:me(),author:me().name,base:C.Black});n.notes=D.notes||'';load(n,'Hoodie Editor: pick a color, add stickers');zone='front';sid='s-front1';ui();showTab('colors');};
 /* ---- curved text ---- */
 const th2v=t=>100*Math.log(t*32)/Math.log(64),v2th=v=>Math.round(Math.pow(64,v/100)/32*1024)/1024;
@@ -164,7 +186,7 @@ $('#lidc').addEventListener('change',e=>{if(e.target.type==='color'){D.colors.li
 $('#botBtn').onclick=()=>{const n=R.makeBottle({designer:me(),author:me().name});n.notes=D.notes||'';load(n,'Bottle Editor: tap the front, back or lid');zone='bottleFront';sid='s-bot1';ui();showTab('place');};
 /* ---- repeat / pattern ---- */
 let repMode='row';
-function paintRep(){const L=(D.garment==='leggings'||D.garment==='joggers'),modes=L?['wrap','row','column']:['row','column'];if(!modes.includes(repMode))repMode=L?'wrap':'row';
+function paintRep(){const L=R.isLegs(D),modes=L?['wrap','row','column']:['row','column'];if(!modes.includes(repMode))repMode=L?'wrap':'row';
  chips('#repMode',modes,repMode,v=>({wrap:'Around waistband',row:'Row across',column:'Column down'})[v]);const s=cur();
  $('#repGo').disabled=!s;$('#repUn').disabled=$('#repDel').disabled=!(s&&s.group);
  $('#repHint').textContent=s&&s.group?`Part of a repeat group (${R.zk(D).reduce((n,z)=>n+(D.zones[z]||[]).filter(q=>q.group===s.group).length,0)} copies). Change count/spacing and tap Repeat to re-tile.`:'Pick a sticker, then repeat it. Copies tile evenly and stay linked as a group, so repeating again re-tiles them.';}
@@ -174,6 +196,7 @@ function doRepeat(mode,count,gap){repMode=mode;const s=cur();if(!s){toast('Tap a
 $('#repGo').onclick=()=>doRepeat(repMode,+$('#repN').value,+$('#repG').value);
 $('#repUn').onclick=()=>{const s=cur();if(s&&s.group){R.ungroup(D,s.group);commit();ui();toast('Ungrouped: each copy moves on its own now');}};
 $('#repDel').onclick=()=>{const s=cur();if(!s||!s.group)return;const g=s.group;R.zk(D).forEach(z=>D.zones[z]=(D.zones[z]||[]).filter(q=>q.group!==g));sid=null;commit();ui();};
+$('#shortsBtn').onclick=()=>{const n=R.makeShorts({designer:me(),author:me().name});n.notes=D.notes||'';load(n,'Shorts Editor: tap the waistband or a leg');zone='shLeftLeg';sid='s-sh1';ui();showTab('place');};
 $('#legBtn').onclick=()=>{const n=R.makeLeggings({designer:me(),author:me().name});n.notes=D.notes||'';load(n,'Leggings Editor: tap the waistband or a leg');zone='leftLeg';sid='s-leg1';ui();showTab('place');};
 $('#teeBtn').onclick=()=>{const n=R.makeEditor('tee',{designer:me(),author:me().name});n.notes=D.notes||'';load(n,'Tee Editor: black tee ready');zone='front';sid='s-front1';ui();showTab('place');};
 /* sticker page */
@@ -189,11 +212,11 @@ function paintRole(){const m=me();$('#whoName').textContent=`${m.name} · ${m.ro
 let rvKey='';
 function paintReview(){const m=me(),d=D,k=[m.role,d.status,(d.history||[]).length,d.reviewNotes,(d.designer||{}).name,d.name].join('|');if(k===rvKey)return;rvKey=k;
  const who=d.designer&&d.designer.name?`<b class="credit">designs by ${esc(d.designer.name)}</b>`:'<i>no credit</i>';
+ if(!(d.status==='submitted'||d.reviewNotes||(m.role!=='owner'&&d.status==='rejected'))){$('#review').innerHTML='<button id="ydBtn" class="wide yd">📂 Your designs</button>';$('#ydBtn').onclick=()=>{const s=$('#yourDesigns');s.classList.add('flash');s.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>s.classList.remove('flash'),1500);};return;}
  let h=`<div class="rv"><div>${esc(d.name)}</div><div>${who} <span class="pill ${d.status}">${d.status}</span></div>`;
  if(d.reviewNotes)h+=`<p><b>Guy's notes:</b> ${esc(d.reviewNotes)}</p>`;
  if(m.role==='owner'&&d.status==='submitted')h+=`<textarea id="rvNotes" rows="3" placeholder="Review notes (required to reject)"></textarea><div class="acts"><button class="ok" id="rvOk">✔ Approve</button><button class="no" id="rvNo">✖ Reject</button></div>`;
- else if(m.role==='owner')h+=`<p class="hint">Open a designer's submitted file or link to review it here.</p>`;
- else if(d.status==='rejected')h+=`<p class="hint">Revise the design, then tap <b>Submit to Guy</b> to resubmit.</p>`;
+  else if(d.status==='rejected')h+=`<p class="hint">Revise the design, then tap <b>Submit to Guy</b> to resubmit.</p>`;
  else h+=`<p class="hint">${d.status==='submitted'?'Waiting on Guy.':'When it\'s ready, tap <b>Submit to Guy</b>.'}</p>`;
  const hs=(d.history||[]).slice(-6);if(hs.length)h+=`<ol>${hs.map(x=>`<li>${esc(x.action)} · ${esc(x.by)} · ${new Date(x.at).toLocaleString()}${x.note?' — '+esc(x.note):''}</li>`).join('')}</ol>`;
  $('#review').innerHTML=h+'</div>';const ok=$('#rvOk');if(ok){ok.onclick=()=>approve($('#rvNotes').value);$('#rvNo').onclick=()=>reject($('#rvNotes').value);}}
@@ -243,8 +266,63 @@ addEventListener('keydown',e=>{if(/INPUT|TEXTAREA/.test(e.target.tagName)&&e.tar
  else if(k==='Tab'){sel=sel==='logo'?'word':'logo';}else if(k==='f'||k==='F'){D.view=D.view==='front'?'back':'front';}
  else if(k==='h'||k==='H'){D.wordmark.hidden=!D.wordmark.hidden;if(D.wordmark.hidden)D.wordmark.placement='none';}else if(k==='m'||k==='M'){toggleM();return;}else if(k==='?'){modal(HELP);return;}else if(k==='Escape'){$('#modal').hidden=true;return;}else hit=0;
  if(hit){e.preventDefault();if(k.startsWith('Arrow'))o.placement='custom';commit();ui();}});
+
+/* ---- Set mode: top + bottom stacked as one outfit ---- */
+const TOPS={tee:'Tee',crop:"Crop / women's tee",longsleeve:'Long Sleeve',hoodie:'Hoodie',zip:'Zip Jacket'},BOTS={leggings:'Leggings',joggers:'Joggers',shorts:'Gym Shorts',pants:'Track Pants'};
+let SET=null;
+const pieceKey=d=>d.cut||d.garment;
+function mkPiece(k,base){const g=k==='crop'?'tee':k==='pants'?'joggers':k;const d=R.makeEditor(g,{designer:me(),author:me().name,base:base||undefined});if(k==='joggers')d.name='New Jimmi joggers';if(k==='crop'||k==='pants'){d.cut=k;d.name='New Jimmi '+(k==='crop'?'crop tee':'track pants');}return d;}
+function firstZone(d){return d.garment==='shorts'?'shLeftLeg':R.isLegs(d)?'leftLeg':'front';}
+function setActive(w){if(!SET)return;SET[SET.active]=D;SET.active=w;D=SET[w];last=snap();undo=[];redo=[];zone=firstZone(D);sid=null;}
+function enterSet(top,bot,active){SET={top,bottom:bot,active:'top',target:'top'};D=top;last=snap();undo=[];redo=[];zone=firstZone(D);sid=null;if(active==='bottom')setActive('bottom');SET.target=SET.active;document.body.classList.add('setmode');paintSetBar();ui();showTab('colors');toast('👯 Set mode: tap Top, Bottom or Both, then design');}
+function exitSet(){if(!SET)return;SET[SET.active]=D;SET=null;document.body.classList.remove('setmode');ui();}
+function paintSetBar(){if(!SET)return;const t=pieceKey(SET.active==='top'?D:SET.top),b=pieceKey(SET.active==='bottom'?D:SET.bottom);
+ $('#setTop').innerHTML=Object.entries(TOPS).map(([k,n])=>`<option value="${k}"${k===t?' selected':''}>${n}</option>`).join('');
+ $('#setBot').innerHTML=Object.entries(BOTS).map(([k,n])=>`<option value="${k}"${k===b?' selected':''}>${n}</option>`).join('');
+ [...$('#setTgt').children].forEach(x=>x.classList.toggle('on',x.dataset.t===SET.target));}
+const other=()=>SET.active==='top'?SET.bottom:SET.top;
+function mirror(prev){const O=other();if(!O||!prev)return;const pc=prev.colors||{},dc=D.colors||{};
+ if(pc.base!==dc.base)O.colors.base=dc.base;if(pc.stripe!==dc.stripe)O.colors.stripe=dc.stripe;if(pc.stripeWidth!==dc.stripeWidth)O.colors.stripeWidth=dc.stripeWidth;
+ const all=d=>Object.entries(d.zones||{}).flatMap(([z,a])=>(a||[]).map(s=>[z,s]));const P=new Map(all(prev).map(([z,s])=>[s.id,s])),N=new Map(all(D).map(([z,s])=>[s.id,[z,s]]));
+ const twin=id=>{for(const [z,s] of all(O))if(s.mirrorOf===id||s.id===(N.get(id)||[])[1]?.mirrorOf)return [z,s];return null;};
+ for(const [id,[z,s]] of N){const p=P.get(id);if(!p){const oz=O.zones[z]!==undefined?z:firstZone(O);const Z=R.ZONES[oz];const c=JSON.parse(JSON.stringify(s));c.id='s'+Math.random().toString(36).slice(2,8);c.mirrorOf=s.id;if(!O.zones[z]&&Z&&Z.rect){const [rx,ry,rw,rh]=Z.rect;c.x=rx+rw/2;c.y=ry+rh/2;}(O.zones[oz]=O.zones[oz]||[]).push(c);}
+  else if(JSON.stringify(p.colors)!==JSON.stringify(s.colors)||p.scale!==s.scale||p.rotation!==s.rotation){const t=twin(id);if(t){t[1].colors={...s.colors};t[1].scale=s.scale;t[1].rotation=s.rotation;}}}
+ for(const [id] of P)if(!N.has(id)){const t=twin(id);if(t)O.zones[t[0]]=O.zones[t[0]].filter(x=>x!==t[1]);}
+ O.updated=new Date().toISOString();}
+const _commit=commit;commit=function(){let prev=null;if(SET&&SET.target==='both'){try{prev=JSON.parse(last);}catch(_){}}_commit();if(prev)mirror(prev);};
+function bbox(c){const w=c.width,h=c.height,px=c.getContext('2d').getImageData(0,0,w,h).data;const fg=(x,y)=>{const t=y/h,i=(y*w+x)*4;const r=29+(11-29)*t,g=18+(6-18)*t,b=56+(24-56)*t;return Math.abs(px[i]-r)+Math.abs(px[i+1]-g)+Math.abs(px[i+2]-b)>40;};
+ const bgm=new Uint8Array(w*h),q=[];const seed=(x,y)=>{const k=y*w+x;if(!bgm[k]&&!fg(x,y)){bgm[k]=1;q.push(k);}};for(let x=0;x<w;x++){seed(x,0);seed(x,h-1);}for(let y=0;y<h;y++){seed(0,y);seed(w-1,y);}while(q.length){const k=q.pop(),x=k%w,y=(k-x)/w;if(x>0)seed(x-1,y);if(x<w-1)seed(x+1,y);if(y>0)seed(x,y-1);if(y<h-1)seed(x,y+1);}
+ const im=c.getContext('2d').getImageData(0,0,w,h);for(let k=0;k<w*h;k++)if(bgm[k])im.data[k*4+3]=0;c.getContext('2d').putImageData(im,0,0);const fg0=fg;
+ let x0=w,x1=0,y0=h,y1=0;for(let y=0;y<h;y+=2)for(let x=0;x<w;x+=2)if(!bgm[y*w+x]){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+ const row=y=>{let a=-1,b=-1;for(let x=0;x<w;x++)if(!bgm[y*w+x]){if(a<0)a=x;b=x;}return a<0?[x0,x1]:[a,b];};return {x0,x1,y0,y1,row};}
+let OUT={split:550};
+function drawOutfit(){if(!SET)return;const T=SET.active==='top'?D:SET.top,B=SET.active==='bottom'?D:SET.bottom,view=D.view==='back'?'back':'front';
+ const tv=d=>{const c=document.createElement('canvas');c.width=600;c.height=800;R.drawTee(c.getContext('2d'),d,{view,label:false,guides:false});return c;},tc=tv(T),bc=tv(B),tb=bbox(tc),bb=bbox(bc);let ty1=tb.y1;if(T.cut==='crop')ty1=Math.round(tb.y0+(tb.y1-tb.y0)*.78);
+ const hem=tb.row(Math.max(tb.y0,ty1-8)),waist=bb.row(Math.min(bb.y1,bb.y0+8));const s=(hem[1]-hem[0])/Math.max(1,waist[1]-waist[0]);
+ const th=ty1-tb.y0,bh=(bb.y1-bb.y0)*s,ov=6,tw=tb.x1-tb.x0,bw=(bb.x1-bb.x0)*s,hc=(hem[0]+hem[1])/2,wc=(waist[0]+waist[1])/2;
+ const W=600,H=1100,tot=th+bh-ov,f=Math.min((W-40)/Math.max(tw,bw),(H-40)/tot),oy=(H-tot*f)/2,cx=W/2;
+ const o=$('#outfit'),x=o.getContext('2d');x.setTransform(1,0,0,1,0,0);const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1d1238');g.addColorStop(1,'#0b0618');x.fillStyle=g;x.fillRect(0,0,W,H);
+ const bY=oy+(th-ov)*f;x.drawImage(bc,bb.x0,bb.y0,bb.x1-bb.x0,bb.y1-bb.y0,cx-(wc-bb.x0)*s*f,bY,(bb.x1-bb.x0)*s*f,bh*f);
+ x.drawImage(tc,tb.x0,tb.y0,tw,th,cx-(hc-tb.x0)*f,oy,tw*f,th*f);OUT.split=bY;
+ const lab=(t,y,on)=>{x.font='bold 22px system-ui';x.fillStyle=on?'#b06cff':'#ffffff88';x.fillText(t,14,y);};lab((SET.target==='both'?'◆ ':SET.active==='top'?'▶ ':'')+'TOP · '+TOPS[pieceKey(T)],30,SET.active==='top'||SET.target==='both');lab((SET.target==='both'?'◆ ':SET.active==='bottom'?'▶ ':'')+'BOTTOM · '+BOTS[pieceKey(B)],H-16,SET.active==='bottom'||SET.target==='both');}
+const _ui=ui;ui=function(){_ui.apply(this,arguments);if(SET){paintSetBar();drawOutfit();}};
+const _draw=draw;draw=function(){_draw.apply(this,arguments);if(SET)drawOutfit();};
+function saveSet(){SET[SET.active]=D;const act=SET.active;D=SET.top;last=snap();saveDesign();SET.top=D;D=SET.bottom;last=snap();saveDesign();SET.bottom=D;pairWith(SET.top.saveId);
+ const L=getSaved();for(const k of ['top','bottom']){const x=L.find(y=>y.id===SET[k].saveId);if(x)SET[k].pair=x.design.pair;}D=SET[act];last=snap();ui();toast('👯 Set saved — both pieces are in 📂 Your designs, paired as a set');}
+function openSet(x){if(!x||!x.design.pair)return;const y=getSaved().find(z=>z.id===x.design.pair.id);if(!y){toast('Its pair is missing');return;}const a=JSON.parse(JSON.stringify(x.design)),b=JSON.parse(JSON.stringify(y.design));
+ const isTop=d=>!R.isLegs(d)&&d.garment!=='bottle';const top=isTop(a)?a:b,bot=isTop(a)?b:a;if(!isTop(top)||isTop(bot)){toast('Open as set needs one top and one bottom');return;}
+ for(const d of [top,bot]){d.colors.stripeWidth=d.colors.stripeWidth||7;d.view=d.view||'front';}enterSet(R.upgrade(top),R.upgrade(bot),'top');toast('👯 Opened '+top.name+' + '+bot.name+' as a set');}
+const startSet=()=>{if(SET)return exitSet();const base=D.colors&&D.colors.base;const cur=pieceKey(D);let top,bot;
+ if(TOPS[cur]&&tee()){top=JSON.parse(JSON.stringify(D));delete top.saveId;delete top.pair;bot=mkPiece('joggers',base);}else if(BOTS[cur]){bot=JSON.parse(JSON.stringify(D));delete bot.saveId;delete bot.pair;top=mkPiece('tee',base);}else{top=mkPiece('tee');bot=mkPiece('joggers');}
+ enterSet(top,bot,'top');};
+$('#bSet').onclick=startSet;$('#setBtn').onclick=startSet;$('#setExit').onclick=exitSet;
+$('#setTgt').onclick=e=>{const b=e.target.closest('[data-t]');if(!b||!SET)return;const t=b.dataset.t;SET.target=t;if(t!=='both'&&t!==SET.active)setActive(t);ui();};
+$('#setTop').onchange=e=>{SET[SET.active]=D;const n=mkPiece(e.target.value,SET.top.colors.base);SET.top=n;if(SET.active==='top'){D=n;last=snap();zone=firstZone(D);sid=null;}ui();};
+$('#setBot').onchange=e=>{SET[SET.active]=D;const n=mkPiece(e.target.value,SET.bottom.colors.base);SET.bottom=n;if(SET.active==='bottom'){D=n;last=snap();zone=firstZone(D);sid=null;}ui();};
+$('#outfit').onclick=e=>{if(!SET)return;const r=e.target.getBoundingClientRect(),y=(e.clientY-r.top)*1100/r.height,w=y<OUT.split?'top':'bottom';if(SET.target!=='both'){SET.target=w;}if(w!==SET.active)setActive(w);ui();};
+window.__jimmiSet={get:()=>SET&&{...SET,[SET.active]:D},start:startSet,save:()=>saveSet(),exit:exitSet};
 /* ---- boot ---- */
-R.ready(()=>{paintInbox();if(!PROF)setTimeout(()=>profileModal(true),50);const q=new URLSearchParams(location.search).get('d')||new URLSearchParams(location.hash.slice(1)).get('d');
+R.ready(()=>{paintInbox();paintSaved();if(!PROF)setTimeout(()=>profileModal(true),50);const q=new URLSearchParams(location.search).get('d')||new URLSearchParams(location.hash.slice(1)).get('d');
  if(q){try{load(JSON.parse(b64u.dec(q)),'Opened design from link');undo=[];}catch(_){toast('That link has a broken design');}}
  ui();window.__jimmiReady=true;});
 })();

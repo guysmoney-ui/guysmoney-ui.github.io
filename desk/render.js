@@ -1,14 +1,16 @@
 /* Jimmi's Design Shop — shared renderer (browser + headless tool). No modules, works on file:// */
 (function(W){
-const C={Black:'#111114',Navy:'#14204a',Cobalt:'#1f4fd1',Teal:'#0f8f8c',Purple:'#5b2a9e',Red:'#c8102e',White:'#f2f2f2',Heather:'#9a9aa2',Peach:'#ffb48a','Sky Blue':'#7cc8ff',Yellow:'#ffd400',Gold:'#e0a526',Coral:'#ff6f61',Orange:'#ff7a00',Neon:'#22e6ff',Pink:'#ff2bd6',Cream:'#f3e7c9'};
-const BASES=['Black','Navy','Cobalt','Teal','Purple','Red','White','Heather','Peach','Sky Blue'];
-const INKS=['Yellow','Gold','Red','Coral','Orange','Neon','Pink','White','Black','Cream','Cobalt','Teal'];
+const C={Black:'#111114',Navy:'#14204a',Cobalt:'#1f4fd1',Teal:'#0f8f8c',Purple:'#5b2a9e',Red:'#c8102e',White:'#f2f2f2',Heather:'#9a9aa2',Peach:'#ffb48a','Sky Blue':'#7cc8ff',Yellow:'#ffd400',Gold:'#e0a526',Coral:'#ff6f61',Orange:'#ff7a00',Neon:'#22e6ff',Pink:'#ff2bd6',Cream:'#f3e7c9',Mocha:'#8B6A55',Chocolate:'#4E3326',Brown:'#6B4A35',Plum:'#5E2B4F','Deep Red':'#8E1B22','Brick Red':'#A4442F','Dusty Blue':'#7A93AC','Off-White':'#F2EFE6',Burgundy:'#6D1A2C','Neon Green':'#39FF14'};
+const TREND=['Mocha','Chocolate','Brown','Plum','Navy','Deep Red','Brick Red','Dusty Blue','Off-White','Burgundy','Neon Green'];
+const BASES=['Black','Navy','Cobalt','Teal','Purple','Red','White','Heather','Peach','Sky Blue',...TREND.filter(n=>n!=='Navy')];
+const INKS=['Yellow','Gold','Red','Coral','Orange','Neon','Pink','White','Black','Cream','Cobalt','Teal',...TREND];
 const G={
  leggings:{n:'Leggings',pants:1,area:'All-over print (Printful AOP leggings, full panels)',lp:['hip','thigh','calf','waistband','back'],wp:['down the leg','under the logo','none']},
  joggers:{n:'Joggers',pants:1,area:'All-over print joggers (approx. print panels)',lp:['hip','thigh','calf','waistband','back'],wp:['down the leg','under the logo','none']},
  tee:{n:'Tee',area:'DTG front/back print area 12″ × 16″',lp:['chest','left chest','back','hip'],wp:['under the logo','chest','none']},
  longsleeve:{n:'Long Sleeve',area:'DTG front/back 12″ × 16″ · sleeve approx.',lp:['chest','left chest','back','hip'],wp:['under the logo','chest','down the sleeve','none']},
  hoodie:{n:'Hoodie',area:'DTG front ~12″ × 10″ · back 12″ × 16″',lp:['chest','left chest','back'],wp:['under the logo','chest','down the sleeve','none']},
+ shorts:{n:'Gym Shorts',pants:1,editorOnly:1,area:'All-over print gym shorts (approx. print panels)',lp:['thigh','waistband','back'],wp:['none']},
  bottle:{n:'Shaker Bottle',editorOnly:1,area:'Bottle Editor only',lp:['front'],wp:['none']},
  zip:{n:'Zip Jacket',area:'Left-chest ~4″ × 4″ · back 12″ × 16″',lp:['left chest','back'],wp:['under the logo','down the sleeve','none']}};
 const LOGO_H=150,WORD_W=290;
@@ -26,7 +28,8 @@ function validate(d){const e=[];if(!d||d.schema!=='jimmi.design')e.push('schema 
  if(d&&(!d.logo||typeof d.logo.x!=='number'))e.push('logo.x/y/scale missing');if(d&&!d.wordmark)e.push('wordmark missing');return e;}
 function shade(hex,a){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(v+a)));return `rgb(${f(r)},${f(g)},${f(b)})`;}
 function path(g,back){const p=new Path2D();
- if(G[g].pants){const w=g==='joggers'?18:0;p.moveTo(165-w,80);p.lineTo(435+w,80);p.lineTo(445+w,300);p.lineTo(410+w/2,750);p.lineTo(330-w/2,750);p.lineTo(305,330);p.lineTo(295,330);p.lineTo(270+w/2,750);p.lineTo(190-w/2,750);p.lineTo(155-w,300);p.closePath();}
+ if(g==='shorts'){/* above the knee, side split hem */p.moveTo(165,80);p.lineTo(435,80);p.lineTo(456,300);p.lineTo(468,428);p.quadraticCurveTo(462,452,446,448);p.quadraticCurveTo(440,470,420,472);p.lineTo(318,472);p.lineTo(305,352);p.lineTo(295,352);p.lineTo(282,472);p.lineTo(180,472);p.quadraticCurveTo(160,470,154,448);p.quadraticCurveTo(138,452,132,428);p.lineTo(144,300);p.closePath();}
+ else if(G[g].pants){const w=g==='joggers'?18:0;p.moveTo(165-w,80);p.lineTo(435+w,80);p.lineTo(445+w,300);p.lineTo(410+w/2,750);p.lineTo(330-w/2,750);p.lineTo(305,330);p.lineTo(295,330);p.lineTo(270+w/2,750);p.lineTo(190-w/2,750);p.lineTo(155-w,300);p.closePath();}
  else{const long=g!=='tee';p.moveTo(205,120);p.lineTo(255,100);if(back)p.quadraticCurveTo(300,108,345,100);else p.quadraticCurveTo(300,140,345,100);p.lineTo(395,120);
   if(long){p.lineTo(470,200);p.lineTo(520,560);p.lineTo(470,570);p.lineTo(425,300);}else{p.lineTo(500,200);p.lineTo(460,265);p.lineTo(420,240);}
   p.lineTo(425,690);p.lineTo(175,690);

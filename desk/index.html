@@ -9,6 +9,9 @@
  <div class="signrow">
   <div class="brand"><h1 class="neon">Jimmi's Design Shop</h1><p class="sub">Jimmi line creator's tool · <button id="bProf" class="who" title="Who's designing? (settings)">⚙ <span id="whoName">…</span></button></p></div>
   <div class="tools">
+   <button id="bSet" class="setb" title="Design a top + bottom as one outfit">👯<span> Set mode</span></button>
+   <button id="bSave" class="save" title="Save design to My Designs (Ctrl+Shift+S)">💾<span> Save</span></button>
+   <button id="bPair" title="Pair this design with a saved one (sold as a set)">🔗<span> Pair with</span></button>
    <button id="bOpen" title="Open design (Ctrl+O)">📂<span> Open</span></button>
    <button id="bUndo" title="Undo (Ctrl+Z)">↶</button><button id="bRedo" title="Redo (Ctrl+Y)">↷</button>
    <button id="bLink" title="Copy share link (Ctrl+Shift+C)">🔗<span> Link</span></button>
@@ -22,15 +25,16 @@
 <audio id="bgm" src="audio/jimmy-soft.mp3" loop preload="none" playsinline></audio>
 <main class="shop">
  <aside class="rack left">
-  <section data-tab="garment"><button id="teeBtn" class="wide teeBtn">👕 Tee Editor <small>(black tee, stickers, sleeves, back)</small></button><button id="legBtn" class="wide teeBtn">🩱 Leggings Editor <small>(waistband wrap, both legs, back)</small></button><button id="hoodBtn" class="wide teeBtn">🧥 Hoodie Editor <small>(any color, stickers, sleeves, back · also long sleeve &amp; zip)</small></button><button id="botBtn" class="wide teeBtn">🥤 Bottle Editor <small>(24/28 oz shaker, front, back, lid)</small></button><h4>Garments rack</h4><div class="row" id="g"></div>
+  <section data-tab="garment"><button id="setBtn" class="wide teeBtn setb">👯 Set mode <small>(top + bottom stacked as one outfit, saved as a pair)</small></button><button id="teeBtn" class="wide teeBtn">👕 Tee Editor <small>(black tee, stickers, sleeves, back)</small></button><button id="legBtn" class="wide teeBtn">🩱 Leggings Editor <small>(waistband wrap, both legs, back)</small></button><button id="shortsBtn" class="wide teeBtn">🩳 Shorts Editor <small>(gym shorts, waistband wrap, legs, back)</small></button><button id="hoodBtn" class="wide teeBtn">🧥 Hoodie Editor <small>(any color, stickers, sleeves, back · also long sleeve &amp; zip)</small></button><button id="botBtn" class="wide teeBtn">🥤 Bottle Editor <small>(24/28 oz shaker, front, back, lid)</small></button><h4>Garments rack</h4><div class="row" id="g"></div>
    <div class="legacy"><h4>View</h4><div class="row" id="view"></div></div>
    <h4>Start from an idea</h4><div class="starters" id="starters"></div><button id="surprise" class="wide">🎲 Surprise me</button></section>
   <section data-tab="inbox" class="subs"><div class="store-sign"><span class="neon2" id="subsSign">Submissions</span></div>
    <div id="review"></div>
-   <div class="row"><button class="chip" id="rOpen">📂 Open file</button><button class="chip" id="rLink">🔗 Paste link</button></div><p class="hint">Or drop a submitted .jimmi.json anywhere on the window.</p></section>
+   </section>
+  <section data-tab="inbox" id="yourDesigns"><h4>📂 Your designs</h4><div class="row"><button class="chip" id="rOpen">📂 Open file</button><button class="chip" id="rLink">🔗 Paste link</button></div><div id="saved" class="inbox"></div><p class="hint">Saved on this device. Tap one to reopen it in its editor.</p></section>
   <section data-tab="inbox"><h4>📥 JimmiBot Inbox</h4><div id="inbox" class="inbox"></div><p class="hint">Or drop a .jimmi.json anywhere on the window.</p></section>
  </aside>
- <section class="stage"><div class="spot"></div><div class="stagebar teeOnly"><button id="flip" class="hot">⟲ Flip: <b id="flipLab">Front</b></button><button id="stkBtn">➕ Sticker page</button></div><canvas id="cv" width="1200" height="1600"></canvas>
+ <section class="stage"><div id="setBar" class="setbar"><b>👯 Set</b> <label>Top <select id="setTop"></select></label> <label>Bottom <select id="setBot"></select></label> <span class="seg" id="setTgt"><button data-t="top">Top</button><button data-t="bottom">Bottom</button><button data-t="both">Both</button></span> <button id="setExit" class="chip">✕ Exit set</button></div><canvas id="outfit" width="600" height="1100" title="Tap the top or bottom to edit it"></canvas><div class="spot"></div><div class="stagebar teeOnly"><button id="flip" class="hot">⟲ Flip: <b id="flipLab">Front</b></button><button id="stkBtn">➕ Sticker page</button></div><canvas id="cv" width="1200" height="1600"></canvas>
   <p class="cap" id="cap"></p></section>
  <aside class="rack right">
   <section data-tab="colors"><h4>Base color</h4><div class="row" id="base"></div>

@@ -15,10 +15,27 @@ const ZONES={
  bottleFront:{n:'Bottle front',view:'front',g:'bottle',rect:[200,280,200,330],inch:[4,6.5]},
  bottleBack:{n:'Bottle back',view:'back',g:'bottle',rect:[200,280,200,330],inch:[4,6.5]},
  lid:{n:'Lid',lid:1,g:'bottle',rect:[212,128,176,84],inch:[3.5,1.5]},
+ shWaist:{n:'Waistband (front)',view:'front',g:'leggings',band:1,rect:[160,82,280,50],inch:[15,2.5]},
+ shWaistBack:{n:'Waistband (back)',view:'back',g:'leggings',band:1,rect:[160,82,280,50],inch:[15,2.5]},
+ shRightLeg:{n:'Right leg',view:'front',g:'leggings',rect:[138,138,162,330],inch:[8,10]},
+ shLeftLeg:{n:'Left leg',view:'front',g:'leggings',rect:[300,138,162,330],inch:[8,10]},
+ shBack:{n:'Back',view:'back',g:'leggings',rect:[138,138,324,330],inch:[16,10]},
+ /* long-sleeve lower arm (hoodie / zip / long sleeve only); canvas coords, side like leftSleeve/rightSleeve */
+ leftForearm:{n:'Left forearm',sleeve:1,low:1,side:1,rect:[520,288,72,176],inch:[3.5,9],g:'tee'},
+ rightForearm:{n:'Right forearm',sleeve:1,low:1,side:-1,rect:[8,288,72,176],inch:[3.5,9],g:'tee'},
+ leftWrist:{n:'Left wrist',sleeve:1,low:1,side:1,rect:[536,462,60,62],inch:[3,3],g:'tee'},
+ rightWrist:{n:'Right wrist',sleeve:1,low:1,side:-1,rect:[4,462,60,62],inch:[3,3],g:'tee'},
+ /* hoodie / zip ribbed hem band */
+ hemFront:{n:'Hem band (front)',view:'front',hem:1,rect:[156,619,290,27],inch:[20,1.75],g:'tee'},
+ hemBack:{n:'Hem band (back)',view:'back',hem:1,rect:[156,619,290,27],inch:[20,1.75],g:'tee'},
  seat:{n:'Back / seat',view:'back',g:'leggings',rect:[150,138,300,612],inch:[14,30]}};
 ZONES.back.g='tee';
 const ZK=['front','back','leftSleeve','rightSleeve'],LK=['waistband','waistbandBack','rightLeg','leftLeg','seat'];
-const BK=['bottleFront','bottleBack','lid'];const legs=d=>d&&(d.garment==='leggings'||d.garment==='joggers'),gp=d=>d&&d.garment==='joggers'?'joggers':'leggings',bot=d=>d&&d.garment==='bottle';const zk=d=>legs(d)?LK:bot(d)?BK:ZK;
+const BK=['bottleFront','bottleBack','lid'];const SK=['shWaist','shWaistBack','shRightLeg','shLeftLeg','shBack'];const shorts=d=>d&&d.garment==='shorts';const legs=d=>d&&(d.garment==='leggings'||d.garment==='joggers'||d.garment==='shorts'),gp=d=>d&&(d.garment==='joggers'||d.garment==='shorts')?d.garment:'leggings',bot=d=>d&&d.garment==='bottle';const LOWK=['leftForearm','rightForearm','leftWrist','rightWrist'],HEMK=['hemFront','hemBack'];const topK=g=>g==='hoodie'||g==='zip'?[...ZK,...LOWK,...HEMK]:g==='longsleeve'?[...ZK,...LOWK]:ZK;
+const zk=d=>shorts(d)?SK:legs(d)?LK:bot(d)?BK:topK(d&&d.garment);
+const bandOf=(d,back)=>shorts(d)?(back?'shWaistBack':'shWaist'):(back?'waistbandBack':'waistband');
+/* switch style within the pants family; shorts<->leggings remaps zone keys index-wise and pulls art into the new zone */
+function restyle(d,g){if(['tee','longsleeve','hoodie','zip'].includes(g)&&!legs(d)&&!bot(d)){d.garment=g;const K=zk(d);for(const z of Object.keys(d.zones||{}))if(!K.includes(z)){const Z=ZONES[z],to=Z.hem?(Z.view==='back'?'back':'front'):Z.side>0?'leftSleeve':'rightSleeve';(d.zones[to]=d.zones[to]||[]).push(...d.zones[z].map(s=>{clampTo(to,s);s.scale=Math.min(s.scale,fitScale(s.el,to,1));return s;}));delete d.zones[z];}K.forEach(k=>d.zones[k]=d.zones[k]||[]);return d;}const was=shorts(d);d.garment=g;if(was!==shorts(d)&&d.zones){const A=was?SK:LK,B=was?LK:SK,n={};B.forEach((k,i)=>{n[k]=(d.zones[A[i]]||[]).map(s=>{clampTo(k,s);s.scale=Math.min(s.scale,fitScale(s.el,k,3));return s;});});d.zones=n;}return d;}
 /* brand rule: ONLY these elements */
 const EL={logo:{n:'Buff Jimmi logo',parts:['body','hair']},body:{n:'Logo only (no hair)',parts:['body']},hair:{n:'Spiky hair',parts:['hair']},
  word:{n:'Wordmark "Jimmi / at the gym"',parts:['word']},combo:{n:'Logo + wordmark',parts:['body','hair','word']},
@@ -73,9 +90,13 @@ function rawBody(back){const p=new Path2D();p.moveTo(250,108);if(back)p.quadrati
 function rawSleeve(sd){/* sd=-1 viewer-left, 1 viewer-right */const m=x=>300+sd*(x-300),p=new Path2D();
  p.moveTo(m(404),134);p.bezierCurveTo(m(440),146,m(478),176,m(506),226);p.lineTo(m(470),280);p.bezierCurveTo(m(446),270,m(420),262,m(402),258);p.bezierCurveTo(m(400),225,m(404),190,m(404),134);p.closePath();return p;}
 /* which screen side a sleeve zone sits on in a view */
+/* lower long sleeve, canvas coords; sd=-1 viewer-left, 1 viewer-right */
+function lowSleeve(sd){/* raw coords like topExtras, mapped through TM like the body */const m=x=>300+sd*(x-300),p=new Path2D();p.moveTo(m(506),226);p.bezierCurveTo(m(518),300,m(524),420,m(526),560);p.lineTo(m(528),582);p.lineTo(m(490),594);p.lineTo(m(488),572);p.bezierCurveTo(m(484),450,m(480),340,m(470),280);p.closePath();return xf(p);}
+const SLV_TILT=5.1;/* sleeve axis deviation from vertical, degrees */
+function sleeveAxisX(Z,y){const x=544.4+(y-238.5)*.0895;return Z.side>0?x:600-x;}
 function sleeveSide(z,view){return view==='back'?-ZONES[z].side:ZONES[z].side;}
 function zoneVisible(z,view){const Z=ZONES[z];return Z.sleeve||Z.lid?true:Z.view===view;}
-function zonePath(z,view){const Z=ZONES[z];if(Z.sleeve)return sleeve(sleeveSide(z,view));const p=new Path2D(),[x,y,w,h]=Z.rect;p.rect(x,y,w,h);return p;}
+function zonePath(z,view){const Z=ZONES[z];if(Z.low)return lowSleeve(sleeveSide(z,view));if(Z.sleeve)return sleeve(sleeveSide(z,view));const p=new Path2D(),[x,y,w,h]=Z.rect;p.rect(x,y,w,h);return p;}
 /* map canonical sticker coords -> screen coords for view (sleeves mirror on the back) */
 function mir(z,view){return ZONES[z].sleeve&&sleeveSide(z,view)!==ZONES[z].side;}
 function toScreen(z,view,s){return mir(z,view)?{...s,x:600-s.x,rotation:-(s.rotation||0)}:s;}
@@ -88,7 +109,7 @@ function paintLegs(ctx,d,back){const base=d.colors.base,p=R.path(gp(d),back),dar
  ctx.save();ctx.shadowColor='#000';ctx.shadowBlur=26;ctx.shadowOffsetY=8;ctx.fillStyle=gr;ctx.fill(p);ctx.restore();
  ctx.save();ctx.clip(p);ctx.fillStyle=shade(base,dark?14:-18);ctx.fillRect(0,80,600,55);ctx.strokeStyle=shade(base,dark?40:-45);ctx.lineWidth=1.2;ctx.setLineDash([3,3]);
  ctx.beginPath();ctx.moveTo(150,134);ctx.lineTo(450,134);ctx.moveTo(150,86);ctx.lineTo(450,86);ctx.stroke();ctx.setLineDash([]);ctx.lineWidth=2;ctx.strokeStyle=shade(base,-40);if(d.garment==='joggers'){ctx.fillStyle=shade(base,dark?14:-18);ctx.fillRect(0,712,600,40);}ctx.beginPath();ctx.moveTo(300,135);ctx.lineTo(300,330);ctx.stroke();ctx.restore();legStripe(ctx,d,back);}
-function legStripe(ctx,d,back){if(!d.colors.stripe)return;ctx.save();ctx.clip(R.path(gp(d),back));ctx.strokeStyle=d.colors.stripe;ctx.lineWidth=d.colors.stripeWidth||7;ctx.beginPath();ctx.moveTo(162,100);ctx.lineTo(160,300);ctx.lineTo(195,750);ctx.moveTo(438,100);ctx.lineTo(440,300);ctx.lineTo(405,750);ctx.stroke();ctx.restore();}
+function legStripe(ctx,d,back){if(!d.colors.stripe)return;ctx.save();ctx.clip(R.path(gp(d),back));ctx.strokeStyle=d.colors.stripe;ctx.lineWidth=d.colors.stripeWidth||7;ctx.beginPath();if(d.garment==='shorts'){ctx.moveTo(171,100);ctx.lineTo(157,300);ctx.lineTo(146,430);ctx.moveTo(429,100);ctx.lineTo(443,300);ctx.lineTo(454,430);}else{ctx.moveTo(162,100);ctx.lineTo(160,300);ctx.lineTo(195,750);ctx.moveTo(438,100);ctx.lineTo(440,300);ctx.lineTo(405,750);}ctx.stroke();ctx.restore();}
 const BP=[['Black','Red'],['Navy','Yellow'],['Cobalt','Orange'],['Teal','Coral']];
 function bottleBody(sz){const p=new Path2D(),b=sz===28?728:700;p.moveTo(196,236);p.lineTo(404,236);p.quadraticCurveTo(414,240,414,256);p.lineTo(410,b-16);p.quadraticCurveTo(408,b,390,b);p.lineTo(210,b);p.quadraticCurveTo(192,b,190,b-16);p.lineTo(186,256);p.quadraticCurveTo(186,240,196,236);p.closePath();return p;}
 function bottleLid(){const p=new Path2D();p.moveTo(206,236);p.lineTo(200,130);p.quadraticCurveTo(200,118,214,116);p.lineTo(386,116);p.quadraticCurveTo(400,118,400,130);p.lineTo(394,236);p.closePath();return p;}
@@ -101,9 +122,9 @@ function paintBottle(ctx,d,back){const base=d.colors.base,lid=d.colors.lid||C.Re
  ctx.fillStyle=shade(lid,-25);ctx.fillRect(204,214,192,22);ctx.strokeStyle=shade(lid,-60);ctx.lineWidth=2;for(let x=214;x<392;x+=12){ctx.beginPath();ctx.moveTo(x,216);ctx.lineTo(x,234);ctx.stroke();}
  /* spout + flip cap */ctx.fillStyle=shade(lid,-10);const sx=back?330:270;ctx.beginPath();ctx.roundRect(sx-22,92,44,26,8);ctx.fill();ctx.fillStyle=shade(lid,20);ctx.beginPath();ctx.roundRect(back?230:330,100,46,16,6);ctx.fill();}
 function topExtras(ctx,d,back){const g=d.garment,base=d.colors.base,dark=parseInt(base.slice(1),16)<0x303030;if(g==='tee')return;
- for(const sd of [-1,1]){const m=x=>300+sd*(x-300),p=new Path2D();p.moveTo(m(506),226);p.bezierCurveTo(m(530),300,m(548),420,m(556),560);p.lineTo(m(518),572);p.bezierCurveTo(m(506),450,m(490),340,m(470),280);p.closePath();
+ for(const sd of [-1,1]){const m=x=>300+sd*(x-300),p=new Path2D();p.moveTo(m(506),226);p.bezierCurveTo(m(518),300,m(524),420,m(526),560);p.lineTo(m(488),572);p.bezierCurveTo(m(484),450,m(480),340,m(470),280);p.closePath();
   const gr=ctx.createLinearGradient(m(470),0,m(556),0);gr.addColorStop(0,shade(base,dark?20:6));gr.addColorStop(1,shade(base,-20));ctx.save();ctx.shadowColor='#000';ctx.shadowBlur=14;ctx.fillStyle=gr;ctx.fill(p);ctx.restore();
-  ctx.fillStyle=shade(base,dark?12:-16);ctx.beginPath();ctx.moveTo(m(556),560);ctx.lineTo(m(518),572);ctx.lineTo(m(520),594);ctx.lineTo(m(558),582);ctx.closePath();ctx.fill();}
+  ctx.fillStyle=shade(base,dark?12:-16);ctx.beginPath();ctx.moveTo(m(526),560);ctx.lineTo(m(488),572);ctx.lineTo(m(490),594);ctx.lineTo(m(528),582);ctx.closePath();ctx.fill();}
  if(g==='hoodie'||g==='zip'){ctx.fillStyle=shade(base,dark?12:-16);ctx.fillRect(188,676,226,30);}
  if(g==='hoodie'){ctx.save();ctx.strokeStyle=shade(base,dark?36:-40);ctx.lineWidth=14;ctx.beginPath();if(back){ctx.moveTo(236,112);ctx.bezierCurveTo(240,190,360,190,364,112);}else{ctx.moveTo(240,110);ctx.bezierCurveTo(250,170,350,170,360,110);}ctx.stroke();
   if(!back){ctx.lineWidth=3;ctx.strokeStyle=shade(base,dark?60:-60);ctx.beginPath();ctx.moveTo(284,150);ctx.lineTo(282,250);ctx.moveTo(316,150);ctx.lineTo(318,250);ctx.stroke();
@@ -129,7 +150,7 @@ function drawTee(ctx,d,o){o=o||{};const view=o.view||d.view||'front',back=view==
   ctx.restore();topExtras(ctx,d,back);ctx.restore();}
  /* stickers per zone, clipped to print area */
  const glow=o.print?0:.6;
- for(const z of K){if(!zoneVisible(z,view))continue;ctx.save();if(!(LG&&!ZONES[z].band))ctx.clip(zonePath(z,view));if(LG)ctx.clip(R.path(gp(d),back));else if(BT)ctx.clip(ZONES[z].lid?bottleLid():bottleBody(d.size||24));else if(ZONES[z].sleeve){const [x,y,w,h]=ZONES[z].rect;const r=new Path2D();const sx=mir(z,view)?600-x-w:x;r.rect(sx,y,w,h);ctx.clip(r);}else ctx.clip(body(back));
+ for(const z of K){if(!zoneVisible(z,view))continue;ctx.save();if(!(LG&&!ZONES[z].band))ctx.clip(zonePath(z,view));if(LG)ctx.clip(R.path(gp(d),back));else if(BT)ctx.clip(ZONES[z].lid?bottleLid():bottleBody(d.size||24));else if(ZONES[z].sleeve){const [x,y,w,h]=ZONES[z].rect;const r=new Path2D();const sx=mir(z,view)?600-x-w:x;r.rect(sx,y,w,h);ctx.clip(r);}else if(!ZONES[z].hem)ctx.clip(body(back));
   for(const s of sorted(d.zones[z]))drawEl(ctx,toScreen(z,view,s),glow);ctx.restore();}
  if(!o.print&&o.guides!==false){ctx.save();ctx.setLineDash([6,6]);ctx.strokeStyle='#ffffff38';ctx.lineWidth=1.5;if(LG||BT){for(const z of K)if(zoneVisible(z,view))ctx.strokeRect(...ZONES[z].rect);}else{const Z=ZONES[back?'back':'front'];ctx.strokeRect(...Z.rect);}ctx.restore();
   if(o.zone&&zoneVisible(o.zone,view)){ctx.save();ctx.strokeStyle='#ff2bd6';ctx.shadowColor='#ff2bd6';ctx.shadowBlur=16;ctx.lineWidth=3.5;ctx.stroke(zonePath(o.zone,view));ctx.stroke(zonePath(o.zone,view));ctx.restore();}
@@ -146,11 +167,20 @@ function teeHit(d,x,y,view,selZone,selId){
  for(const z of order){if(!zoneVisible(z,view))continue;const arr=sorted(d.zones[z]).reverse();for(const s of arr){const b=boxOf(z,view,s),dx=x-b.x,dy=y-b.y,c=Math.cos(-b.r),sn=Math.sin(-b.r),u=dx*c-dy*sn,v=dx*sn+dy*c;if(Math.abs(u)<=b.w/2+6&&Math.abs(v)<=b.h/2+6)return {kind:'sticker',zone:z,id:s.id};}}
  const c=document.createElement('canvas').getContext('2d');if(bot(d)){for(const z of K){const Z=ZONES[z],[rx,ry,rw,rh]=Z.rect;if((Z.lid||Z.view===view)&&x>=rx-10&&x<=rx+rw+10&&y>=ry-10&&y<=ry+rh+10)return {kind:'zone',zone:z};}return null;}
  if(legs(d)){if(!c.isPointInPath(R.path(gp(d),view==='back'),x,y))return null;for(const z of K){const Z=ZONES[z],[rx,ry,rw,rh]=Z.rect;if(Z.view===view&&x>=rx&&x<=rx+rw&&y>=ry&&y<=ry+rh)return {kind:'zone',zone:z};}return null;}
+ for(const z of K){const Z=ZONES[z];if(Z.low&&zoneVisible(z,view)&&c.isPointInPath(zonePath(z,view),x,y)){const [,ry,,rh]=Z.rect;if(y>=ry-6&&y<=ry+rh+6)return {kind:'zone',zone:z};}}
+ for(const z of K){const Z=ZONES[z];if(Z.hem&&Z.view===view){const [rx,ry,rw,rh]=Z.rect;if(x>=rx&&x<=rx+rw&&y>=ry-4&&y<=ry+rh+4)return {kind:'zone',zone:z};}}
  for(const z of ZK){if(zoneVisible(z,view)&&ZONES[z].sleeve&&c.isPointInPath(zonePath(z,view),x,y))return {kind:'zone',zone:z};}
  if(c.isPointInPath(body(view==='back'),x,y))return {kind:'zone',zone:view==='back'?'back':'front'};return null;}
 function zoneCenter(z){const [x,y,w,h]=ZONES[z].rect;return ZONES[z].sleeve?[x+w/2+ZONES[z].side*4,y+h*.48]:[x+w/2,y+h*.4];}
 function fitScale(el,z,base){const Z=ZONES[z],[,,rw,rh]=Z.rect,[w,h]=dims({el,scale:1});return Math.min(base,(rw*.9)/w,(rh*.9)/h);}
-function sticker(el,colors,z,extra){const [x,y]=zoneCenter(z),Z=ZONES[z];if(el==='stripe'){const Z0=ZONES[z],[,,rw0,rh0]=Z0.rect,vert=rh0>rw0*1.5;return {id:'s'+Math.random().toString(36).slice(2,8),el,lines:1,thick:.25,len:Math.round((vert?rh0:rw0)*.8),...(extra||{}),colors:{body:colors.body,hair:colors.body},x,y:Z0.band?Z0.rect[1]+Z0.rect[3]/2:y,scale:1,rotation:vert?90:0,z:0};}if(el==='text'){const s0={el,scale:1,...(extra||{})},[w,h]=dims(s0),[,,rw,rh]=Z.rect;const sc=+Math.min(Z.band?1:1.6,rw*.8/w,rh*.8/h).toFixed(3);return {id:'s'+Math.random().toString(36).slice(2,8),el,colors:{body:colors.body,hair:colors.body},x,y:Z.band?Z.rect[1]+Z.rect[3]/2:y,scale:sc,rotation:0,z:0,...(extra||{}),...(extra&&extra.scale?{scale:extra.scale}:{})};}let sc=Z.sleeve?(el==='word'?.55:.7):(el==='word'?1.1:1.5);if(Z.g==='bottle')sc=fitScale(el,z,Z.lid?.6:el==='leg'?1:1.3);else if(Z.g==='leggings')sc=fitScale(el,z,el==='leg'?1.5:Z.band?1:1.2);
+/* stickers in lower-sleeve zones lie flat along the sleeve axis; hem band ones lie flat along the hem */
+function sticker(el,colors,z,extra){const s=sticker0(el,colors,z,extra),Z=ZONES[z];if(!Z||!(Z.low||Z.hem))return s;const [rx,ry,rw,rh]=Z.rect;
+ if(el==='stripe'){s.len=Math.round((Z.hem?rw:rh)*.85);s.thick=Math.min(s.thick,Z.hem?.25:.375);}
+ const base=dims({...s,rotation:0}),along=Z.hem?false:(el==='stripe'||el==='text'||el==='word'||base[0]>base[1]*1.3);
+ s.rotation=Z.hem?0:along?Z.side*(90-SLV_TILT):-Z.side*SLV_TILT;
+ if(!(extra&&extra.scale)&&el!=='stripe'){const [w,h]=base,lw=Z.hem?rw*.9:along?rh*.9:rw*.62,lh=Z.hem?rh*.82:along?rw*.42:rh*.88;s.scale=+(s.scale*Math.min(lw/w,lh/h)).toFixed(3);}
+ s.y=ry+rh/2;s.x=Z.low?sleeveAxisX(Z,s.y):rx+rw/2;return s;}
+function sticker0(el,colors,z,extra){const [x,y]=zoneCenter(z),Z=ZONES[z];if(el==='stripe'){const Z0=ZONES[z],[,,rw0,rh0]=Z0.rect,vert=rh0>rw0*1.5;return {id:'s'+Math.random().toString(36).slice(2,8),el,lines:1,thick:.25,len:Math.round((vert?rh0:rw0)*.8),...(extra||{}),colors:{body:colors.body,hair:colors.body},x,y:Z0.band?Z0.rect[1]+Z0.rect[3]/2:y,scale:1,rotation:vert?90:0,z:0};}if(el==='text'){const s0={el,scale:1,...(extra||{})},[w,h]=dims(s0),[,,rw,rh]=Z.rect;const sc=+Math.min(Z.band?1:1.6,rw*.8/w,rh*.8/h).toFixed(3);return {id:'s'+Math.random().toString(36).slice(2,8),el,colors:{body:colors.body,hair:colors.body},x,y:Z.band?Z.rect[1]+Z.rect[3]/2:y,scale:sc,rotation:0,z:0,...(extra||{}),...(extra&&extra.scale?{scale:extra.scale}:{})};}let sc=Z.sleeve?(el==='word'?.55:.7):(el==='word'?1.1:1.5);if(Z.g==='bottle')sc=fitScale(el,z,Z.lid?.6:el==='leg'?1:1.3);else if(Z.g==='leggings')sc=fitScale(el,z,el==='leg'?1.5:Z.band?1:1.2);
  const yy=Z.g==='bottle'?Z.rect[1]+Z.rect[3]/2:Z.band?Z.rect[1]+Z.rect[3]/2:Z.g==='leggings'?(el==='leg'?Z.rect[1]+Z.rect[3]*.4:Z.rect[1]+Z.rect[3]*.3):y;
  return {id:'s'+Math.random().toString(36).slice(2,8),el,colors:{body:colors.body,hair:colors.hair||colors.body},x,y:yy,scale:sc,rotation:ZONES[z].sleeve&&el==='word'?90*ZONES[z].side:0,z:0,...(extra||{})};}
 /* ---- v2 factory / upgrade / validate ---- */
@@ -163,7 +193,7 @@ function makeLeggings(o){o=o||{};const d=v1make({garment:'leggings',base:o.base|
 /* repeat / pattern. mode: 'wrap' (all the way around the waistband: front + back), 'row' (across the zone), 'column' (down the zone).
    Replaces the source sticker (and any earlier copies in its group) with count evenly spaced copies sharing a new group id. Returns the new stickers. */
 function repeat(d,zone,src,o){o=o||{};const n=Math.max(1,Math.min(40,o.count|0||8)),gap=+(o.gap||0),mode=o.mode||'row',gid='g'+Math.random().toString(36).slice(2,7);
- const zs=mode==='wrap'&&legs(d)?['waistband','waistbandBack']:[zone];
+ const zs=mode==='wrap'&&legs(d)?[bandOf(d,0),bandOf(d,1)]:[zone];
  if(src.group)for(const z of zk(d))d.zones[z]=(d.zones[z]||[]).filter(q=>q.group!==src.group);
  d.zones[zone]=(d.zones[zone]||[]).filter(q=>q.id!==src.id);
  const [rx,ry,rw,rh]=ZONES[zs[0]].rect,rot=src.rotation||0,vert=mode==='column';
@@ -176,7 +206,8 @@ function repeat(d,zone,src,o){o=o||{};const n=Math.max(1,Math.min(40,o.count|0||
   const s={...JSON.parse(JSON.stringify(src)),id:'s'+Math.random().toString(36).slice(2,8),group:gid,scale:k,z:++z0};
   if(vert){s.y=ry+loc;}else{s.x=rx+loc;if(ZONES[z].band)s.y=ry+rh/2;}(d.zones[z]=d.zones[z]||[]).push(s);out.push(s);}
  return out;}
-function makeEditor(g,o){o=o||{};if(g==='bottle')return makeBottle(o);if(g==='leggings'||g==='joggers'){const d=makeLeggings(o);d.garment=g;if(o.base)d.colors.base=o.base;return d;}
+function makeShorts(o){o=o||{};const d=makeLeggings({...o,name:o.name||'New Jimmi gym shorts',base:o.base||C.Black});d.garment='shorts';d.zones={};SK.forEach(k=>d.zones[k]=[]);d.zones.shLeftLeg.push(sticker('logo',{body:o.ink||C.Red,hair:o.ink||C.Red},'shLeftLeg',{id:'s-sh1'}));return d;}
+function makeEditor(g,o){o=o||{};if(g==='bottle')return makeBottle(o);if(g==='shorts')return makeShorts(o);if(g==='leggings'||g==='joggers'){const d=makeLeggings(o);d.garment=g;if(o.base)d.colors.base=o.base;return d;}
  const d=makeTee(o);d.garment=g;d.name=o.name||('New Jimmi '+R.G[g].n.toLowerCase());if(o.base)d.colors.base=o.base;return d;}
 function badge(d,zone,colors){const Z=ZONES[zone],[rx,ry,rw,rh]=Z.rect,gid='b'+Math.random().toString(36).slice(2,7),S=Math.min(rw,rh),cx=rx+rw/2,cy=Z.sleeve?ry+rh*.48:ry+Math.min(rh/2,S*.55);
  const zm=Math.max(0,...(d.zones[zone]||[]).map(q=>q.z||0));const H=sticker('head',{body:colors.body,hair:colors.hair||colors.body},zone,{group:gid});const [hw,hh]=dims({el:'head',scale:1});H.scale=+(S*.34/hh).toFixed(3);H.x=cx;H.y=cy;H.z=zm+1;
@@ -208,7 +239,7 @@ function footer(c,d){if(!d.designer||!d.designer.name)return c;const o=document.
  x.fillStyle='#fff';x.font=`italic ${Math.round(fh*.45)}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(`Jimmi at the gym · ${d.name} · designs by ${d.designer.name}${d.status==='approved'?' · approved by Guy':''}`,o.width/2,c.height+fh/2+2);return o;}
 function tag(c,d){if(!d.creditTag||!d.designer||!d.designer.name)return c;const x=c.getContext('2d');x.save();x.setTransform(1,0,0,1,0,0);x.fillStyle='#ffffffcc';x.font=`${Math.round(c.height*.018)}px system-ui`;x.textAlign='right';x.fillText('designs by '+d.designer.name,c.width-12,c.height-12);x.restore();return c;}
 function zonePrint(d,z,dpi){const Z=ZONES[z],[rx,ry,rw,rh]=Z.rect,W2=Math.round(Z.inch[0]*(dpi||150)),k=W2/rw,c=document.createElement('canvas');c.width=W2;c.height=Math.round(rh*k);const x=c.getContext('2d');x.scale(k,k);x.translate(-rx,-ry);
- if(Z.sleeve)x.clip(sleeve(Z.side));if(Z.g==='leggings'){x.clip(R.path(gp(d),Z.view==='back'));if(!Z.band)legStripe(x,d,Z.view==='back');}if(Z.g==='bottle')x.clip(Z.lid?bottleLid():bottleBody(d.size||24));const r=new Path2D();r.rect(rx,ry,rw,rh);x.clip(r);for(const s of sorted(d.zones[z]))drawEl(x,s,0);return c;}
+ if(Z.low)x.clip(lowSleeve(Z.side));else if(Z.sleeve)x.clip(sleeve(Z.side));if(Z.g==='leggings'){x.clip(R.path(gp(d),Z.view==='back'));if(!Z.band)legStripe(x,d,Z.view==='back');}if(Z.g==='bottle')x.clip(Z.lid?bottleLid():bottleBody(d.size||24));const r=new Path2D();r.rect(rx,ry,rw,rh);x.clip(r);for(const s of sorted(d.zones[z]))drawEl(x,s,0);return c;}
 function legacySheet(d,print,px){const vs=[...new Set([d.logo.side||'front',d.wordmark.hidden?(d.logo.side||'front'):(d.wordmark.side||'front'),d.view||'front'])].sort();const cs=vs.map(v=>R.render(d,{print,view:v,px}));if(cs.length===1)return cs[0];const c=document.createElement('canvas');c.width=cs[0].width*cs.length;c.height=px;cs.forEach((s,i)=>c.getContext('2d').drawImage(s,i*s.width,0));return c;}
 function teeView(d,view,px){const k=px/800,c=document.createElement('canvas');c.width=Math.round(600*k);c.height=px;const x=c.getContext('2d');x.scale(k,k);drawTee(x,d,{view,label:false,guides:false});return c;}
 /* exports(d,{px}) -> [{suffix, canvas}] */
@@ -217,6 +248,6 @@ function exportsOf(d,o){o=o||{};const px=o.px||2000;
  if(legs(d)||bot(d)){const K=zk(d),f=teeView(d,'front',px),b=teeView(d,'back',px),m=document.createElement('canvas');m.width=f.width*2;m.height=px;m.getContext('2d').drawImage(f,0,0);m.getContext('2d').drawImage(b,f.width,0);
   return [{suffix:'mockup',canvas:footer(m,d)},...K.map((z,i)=>({suffix:'print-'+z.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),canvas:i===0?tag(zonePrint(d,z),d):zonePrint(d,z)}))];}
  const f=teeView(d,'front',px),b=teeView(d,'back',px),m=document.createElement('canvas');m.width=f.width*2;m.height=px;m.getContext('2d').drawImage(f,0,0);m.getContext('2d').drawImage(b,f.width,0);
- return [{suffix:'mockup',canvas:footer(m,d)},{suffix:'print-front',canvas:tag(zonePrint(d,'front'),d)},{suffix:'print-back',canvas:zonePrint(d,'back')},{suffix:'print-left-sleeve',canvas:zonePrint(d,'leftSleeve')},{suffix:'print-right-sleeve',canvas:zonePrint(d,'rightSleeve')}];}
-Object.assign(R,{STH,PPI,stripeGeom,TEXTS,FONTS,textSticker,badge,textLayout,makeEditor,migrateClassic,BK,BP,makeBottle,ZONES,ZK,LK,zk,repeat,ungroup,makeLeggings,EL,PRESETS,make,makeTee,upgrade,validate,drawTee,teeHit,sticker,dims,drawEl,exportsOf,fromScreen,toScreen,zonePrint,zoneCenter});
+ return [{suffix:'mockup',canvas:footer(m,d)},{suffix:'print-front',canvas:tag(zonePrint(d,'front'),d)},{suffix:'print-back',canvas:zonePrint(d,'back')},{suffix:'print-left-sleeve',canvas:zonePrint(d,'leftSleeve')},{suffix:'print-right-sleeve',canvas:zonePrint(d,'rightSleeve')},...zk(d).filter(z=>ZONES[z].low||ZONES[z].hem).map(z=>({suffix:'print-'+z.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),canvas:zonePrint(d,z)}))];}
+Object.assign(R,{LOWK,HEMK,lowSleeve,SK,shorts,isLegs:legs,bandOf,restyle,makeShorts,STH,PPI,stripeGeom,TEXTS,FONTS,textSticker,badge,textLayout,makeEditor,migrateClassic,BK,BP,makeBottle,ZONES,ZK,LK,zk,repeat,ungroup,makeLeggings,EL,PRESETS,make,makeTee,upgrade,validate,drawTee,teeHit,sticker,dims,drawEl,exportsOf,fromScreen,toScreen,zonePrint,zoneCenter});
 })(window);

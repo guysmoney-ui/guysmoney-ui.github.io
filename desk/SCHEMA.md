@@ -142,3 +142,19 @@ A sticker can be `el:"stripe"` with these extra fields:
 - `len` is the length in logical units, from 6 to 760.
 
 The gap between lines equals the line thickness, with a minimum of 1/16″. `scale`, `rotation`, `colors.body`, `x`, `y`, `z` and `group` work as usual. Length can be changed on its own with the Length slider or the corner drag handle, which stretches only along the stripe and leaves the thickness alone. Stripes added to a leg zone start at rotation 90 (running down the leg).
+
+## Gym Shorts (Oct 31, optional v2 addition)
+- `garment:"shorts"` with `editor:"tee"`. The shorts are drawn above the knee, with an elastic waistband and a side split hem.
+- Zones: `shWaist` (front waistband, 15″×2.5″), `shWaistBack` (back waistband), `shRightLeg` and `shLeftLeg` (8″×10″ each, front view), and `shBack` (16″×10″, back view).
+- All sticker types are allowed, including text and stripe. Repeat mode `wrap` goes around `shWaist` and `shWaistBack`. `colors.stripe` and `colors.stripeWidth` draw a side stripe that follows the shorts' outer seams.
+- Switching between shorts and leggings/joggers in the Style row maps zones index by index (waist→waistband, waistBack→waistbandBack, rightLeg→rightLeg, leftLeg→leftLeg, back→seat) and pulls art into the new zone. Exports produce `print-sh-*` layers.
+
+## Lower sleeves and hem band (Oct 31, optional v2 addition)
+- **Long sleeve, hoodie and zip** get four lower-sleeve zones: `leftForearm` and `rightForearm` (3.5″×9″), and `leftWrist` and `rightWrist` (3″×3″, just above the cuff). They have `sleeve:1,low:1,side:±1`, show in both front and back views (mirrored like the upper sleeves), and clip to the lower sleeve outline. New stickers lie flat along the sleeve's length: wide art and text are rotated `side*(90-5.1)°` so they read along the arm, upright art is tilted `-side*5.1°`, and the scale fits the narrow zone. These zones have no wrap.
+- **Hoodie and zip** also get `hemFront` and `hemBack` (20″×1.75″, `hem:1`) on the ribbed bottom band. Stickers there are horizontal and fitted to the band height. Row repeat is allowed; wrap is not.
+- The tee does not get these zones. Switching a top to a style without them moves that art to the matching upper sleeve, or to the front/back body for the hem.
+- Exports add `print-left-forearm`, `print-right-forearm`, `print-left-wrist`, `print-right-wrist`, `print-hem-front` and `print-hem-back`.
+
+## Optional: saving & pairing (additive, v2-compatible)
+- `saveId` (string): id of this design in the on-device library (`localStorage["jimmiDesigns"]`, array of `{id,name,kind,base,at,design}`).
+- `pair` (object, optional): `{id, name, kind, setId}` — the partner design's `saveId`/name/kind and a shared `setId`. Both designs carry the same `setId`. On the store, items sharing a `setId` can be offered as a set; each item remains individually buyable.
