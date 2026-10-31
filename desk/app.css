@@ -136,3 +136,4 @@ body.setmode #bSet{background:#b06cff;color:#000}
 .acts .tw{background:#ffd400;color:#000;font-weight:700}
 #saved .pill{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;font-size:11px;color:#fff}#saved .pill.needs-tweak{color:#000}
 .stage{justify-content:safe center;overflow:auto}.stageban{flex:none}
+#ctrBtn:disabled{opacity:.45;cursor:not-allowed}

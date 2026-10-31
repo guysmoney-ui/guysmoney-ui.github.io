@@ -346,4 +346,9 @@ const _uiM=ui;ui=function(){_uiM.apply(this,arguments);paintMir();const tb=$('#t
 R.ready(()=>{paintInbox();paintSaved();if(!PROF)setTimeout(()=>profileModal(true),50);const q=new URLSearchParams(location.search).get('d')||new URLSearchParams(location.hash.slice(1)).get('d');
  if(q){try{load(JSON.parse(b64u.dec(q)),'Opened design from link');undo=[];}catch(_){toast('That link has a broken design');}}
  ui();window.__jimmiReady=true;});
+/* ---- 🎯 Center selected element in its print zone ---- */
+function centerSel(){const s=cur();if(!s){toast('🎯 Select a sticker or stripe first');return false;}const r=R.ZONES[zone]&&R.ZONES[zone].rect;if(!r)return false;const [x,y,w,h]=r;s.x=x+w/2;s.y=y+h/2;if(s.placement)s.placement='custom';commit();ui();toast('🎯 Centered in '+(R.ZONES[zone].label||zone));return true;}
+$('#ctrBtn').onclick=centerSel;
+const _uiC=ui;ui=function(){_uiC.apply(this,arguments);const b=$('#ctrBtn');if(b)b.disabled=!cur();};
+if(window.__jimmi)window.__jimmi.center=centerSel;
 })();
