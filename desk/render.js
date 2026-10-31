@@ -2,7 +2,7 @@
 (function(W){
 const C={Black:'#111114',Navy:'#14204a',Cobalt:'#1f4fd1',Teal:'#0f8f8c',Purple:'#5b2a9e',Red:'#c8102e',White:'#f2f2f2',Heather:'#9a9aa2',Peach:'#ffb48a','Sky Blue':'#7cc8ff',Yellow:'#ffd400',Gold:'#e0a526',Coral:'#ff6f61',Orange:'#ff7a00',Neon:'#22e6ff',Pink:'#ff2bd6',Cream:'#f3e7c9',Mocha:'#8B6A55',Chocolate:'#4E3326',Brown:'#6B4A35',Plum:'#5E2B4F','Deep Red':'#8E1B22','Brick Red':'#A4442F','Dusty Blue':'#7A93AC','Off-White':'#F2EFE6',Burgundy:'#6D1A2C','Neon Green':'#39FF14'};
 const TREND=['Mocha','Chocolate','Brown','Plum','Navy','Deep Red','Brick Red','Dusty Blue','Off-White','Burgundy','Neon Green'];
-const BASES=['Black','Navy','Cobalt','Teal','Purple','Red','White','Heather','Peach','Sky Blue',...TREND.filter(n=>n!=='Navy')];
+const BASES=['Black','Navy','Cobalt','Teal','Purple','Red','White','Cream','Heather','Peach','Sky Blue',...TREND.filter(n=>n!=='Navy')];
 const INKS=['Yellow','Gold','Red','Coral','Orange','Neon','Pink','White','Black','Cream','Cobalt','Teal',...TREND];
 const G={
  leggings:{n:'Leggings',pants:1,area:'All-over print (Printful AOP leggings, full panels)',lp:['hip','thigh','calf','waistband','back'],wp:['down the leg','under the logo','none']},
