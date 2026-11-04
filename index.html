@@ -201,5 +201,12 @@ const txt="[InternetShortcut]\r\nURL="+base+"\r\nIconFile="+ico+"\r\nIconIndex=0
 const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/octet-stream"}));
 a.download="Jimmi at the Gym.url";a.click();});
 </script>
-<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http")){addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));}</script></body>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http")){addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));}</script><div class="lb" id="lb" role="dialog" aria-modal="true"><div class="lb-bar"><span id="lb-title"></span><span><button id="lb-zoom" type="button">Zoom +</button> <button id="lb-close" type="button" aria-label="Close">✕</button></span></div><div class="lb-view" id="lb-view"><img id="lb-img" alt=""></div><div class="lb-hint">Tap the photo to zoom · drag to look around · pinch works too</div></div>
+<script>(function(){const lb=document.getElementById("lb"),v=document.getElementById("lb-view"),im=document.getElementById("lb-img"),t=document.getElementById("lb-title"),zb=document.getElementById("lb-zoom");
+function z(on){v.classList.toggle("z",on);zb.textContent=on?"Zoom −":"Zoom +";if(on){v.scrollLeft=(v.scrollWidth-v.clientWidth)/2;v.scrollTop=(v.scrollHeight-v.clientHeight)/2;}}
+function close(){lb.classList.remove("open");document.body.style.overflow="";z(false);}
+document.addEventListener("click",e=>{const i=e.target.closest(".card-img img");if(!i)return;im.src=i.src;im.alt=i.alt;t.textContent=i.alt;z(false);lb.classList.add("open");document.body.style.overflow="hidden";});
+im.addEventListener("click",e=>{e.stopPropagation();z(!v.classList.contains("z"));});zb.onclick=()=>z(!v.classList.contains("z"));
+document.getElementById("lb-close").onclick=close;v.addEventListener("click",e=>{if(e.target===v)close();});document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});})();</script>
+</body>
 </html>

@@ -333,3 +333,15 @@ footer {
   margin: 0 0 1.2rem;
 }
 .enter-card .btn { width: 100%; }
+
+/* Lightbox */
+.card-img img{cursor:zoom-in}
+.lb{position:fixed;inset:0;z-index:9999;background:rgba(5,5,10,.94);display:none;flex-direction:column}
+.lb.open{display:flex}
+.lb-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:#fff;font-size:14px;gap:8px}
+.lb-bar button{background:#222;color:#fff;border:1px solid #444;border-radius:999px;padding:8px 14px;font-size:15px;cursor:pointer}
+.lb-view{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;display:flex}
+.lb-view img{margin:auto;max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in}
+.lb-view.z img{max-width:none;max-height:none;width:250%;cursor:zoom-out}
+@media (min-width:900px){.lb-view.z img{width:160%}}
+.lb-hint{text-align:center;color:#aaa;font-size:12px;padding:6px}
