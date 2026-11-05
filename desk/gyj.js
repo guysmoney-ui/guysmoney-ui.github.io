@@ -1,5 +1,5 @@
 /* "Got your jimmies on?" die-cut text stickers (full-color PNGs, not recolored) + curve tool */
-(function(){const S=[['condensed','Bold Condensed'],['script','Script'],['neon','80s Neon'],['varsity','Varsity'],['typewriter','Typewriter'],['arched','Arched'],['dipped','Dipped']];
+(function(){const S=[['condensed','Bold Condensed'],['script','Script'],['neon','80s Neon'],['varsity','Varsity'],['typewriter','Typewriter'],['arched','Arched'],['dipped','Dipped'],['arched-print','Arched, print only'],['dipped-print','Dipped, print only']];
 window.JIMMI_GYJ=S.map(([k,n])=>({key:'gyj_'+k,n:'Got Your Jimmies On? ('+n+')',src:'assets/stickers/got-your-jimmies-'+k+'.png'}));
 window.JIMMI_GYJ.forEach(g=>window.JIMMI_ASSETS[g.key]=g.src);
 const F=[['GYJBebas','BebasNeue-Regular.ttf','Bold Condensed'],['GYJPacifico','Pacifico-Regular.ttf','Script'],['GYJMonoton','Monoton-Regular.ttf','80s Neon'],['GYJGraduate','Graduate-Regular.ttf','Varsity'],['GYJElite','SpecialElite-Regular.ttf','Typewriter']];
