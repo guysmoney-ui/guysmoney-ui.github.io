@@ -12,7 +12,7 @@ muteBtn.addEventListener('click',()=>{muted=!muted;localStorage.setItem('jimmiMu
 paint();
 /* ---------- routing (one page so music keeps playing across sections) ---------- */
 const P=window.JIMMI_PRODUCTS||[];
-const isW=p=>/Women|leggings|crop|pants/i.test(p.tag+p.id+p.name),isM=p=>/Men'|Men$|· Men|Tee|Long Sleeve|Tracksuit/.test(p.tag)&&!(/Women/i.test(p.tag)&&!/Men/i.test(p.tag))&&!/women/i.test(p.id);
+const isW=p=>/Women|leggings|crop|pants/i.test(p.tag+p.id+p.name),isM=p=>{const t=p.tag||'';const womenOnly=/Women/i.test(t)&&!/· Men|Unisex/i.test(t);return !womenOnly&&!/women/i.test(p.id)&&/Men'|Men$|· Men|Tee|Long Sleeve|Tracksuit/.test(t);};
 const lists={mens:P.filter(isM),womens:P.filter(p=>isW(p)||/Tracksuit/.test(p.tag))};
 const card=p=>`<article class="pc${p.soldOut?' sold-out':''}"><div class="pc-img"><img src="${p.image}" alt="${p.name}" loading="lazy">${p.soldOut?'<div class="sold-overlay" aria-hidden="true"></div><span class="sold-badge">SOLD OUT</span>':''}</div><div><small>${p.tag}</small><br><b>${p.name}</b><br><span class="sku">${p.price!=null?(p.soldOut?'<s>$'+p.price+'</s>':'$'+p.price):(p.sku||'')}</span><br>${p.soldOut?'<span class="btn-soldout" aria-disabled="true">SOLD OUT</span>':`<a href="${p.etsyUrl}" target="_blank" rel="noopener">Buy on Etsy</a>`}</div></article>`;
 for(const k in lists){$(`[data-grid=${k}]`).innerHTML=lists[k].map(card).join('');$(`[data-win=${k}]`).innerHTML=lists[k].slice(0,3).map(p=>`<img src="${p.image}" alt="">`).join('');}

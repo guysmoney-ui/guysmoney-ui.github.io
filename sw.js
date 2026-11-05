@@ -1,4 +1,4 @@
-const C = 'jimmi-v41';
+const C = 'jimmi-v42';
 // Static shell only — never precache products.js / HTML / CSS / studio.js (those change often).
 const PRECACHE = [
   'manifest.webmanifest',
