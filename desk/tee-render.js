@@ -45,6 +45,7 @@ const EL={logo:{n:'Buff Jimmi logo',parts:['body','hair']},body:{n:'Logo only (n
  text:{n:'Curved text',parts:['body']},
  stripe:{n:'Stripe',parts:['body']},
  head:{n:'Just the Jimmi head',parts:['body','hair']},skinny:{n:'Skinny Jimmi logo',parts:['body']},leg:{n:'JIMMI down the leg',parts:['body']}};
+(W.JIMMI_GYJ||[]).forEach(g=>EL[g.key]={n:g.n,parts:['body'],img:1});
 const PRESETS=[['Yellow','Yellow'],['Red','Red'],['Coral','Coral'],['Orange','Orange'],['Gold','Gold'],['Neon','Pink'],['White','White'],['Cream','Gold'],['Black','Red'],['Cobalt','Yellow']];
 const LH=100,WW=170;
 function img(){return W.JIMMI_IMG;}
@@ -70,7 +71,7 @@ const PPI=244/12,STH=[1/32,2];const stripeGeom=s=>{const n=[1,2,3].includes(s.li
 function drawStripe(ctx,s,cb,glow){const G=stripeGeom(s),k=s.scale||1;ctx.save();ctx.scale(k,k);ctx.fillStyle=cb;ctx.shadowColor=cb;ctx.shadowBlur=glow*4;let y=-G.T/2;for(let i=0;i<G.n;i++){ctx.fillRect(-G.L/2,y,G.L,G.t);y+=G.t+G.gap;}ctx.restore();}
 function sleeveWord(s,z){const Z=ZONES[z];if(!(s.el==='leg'&&Z&&Z.sleeve&&Z.rect))return null;let [rx,ry,rw,rh]=Z.rect;const k=s.scale||1;if(s.x<rx||s.x>rx+rw)rx=600-rx-rw;let a=((s.rotation||0)-90)%360;if(a<-180)a+=360;if(a>180)a-=360;if(Math.sin(a*Math.PI/180)<0)a+=a>0?-180:180;/* v25: always read downward, shoulder to cuff */const r=a*Math.PI/180,c=Math.abs(Math.cos(r)),sn=Math.abs(Math.sin(r));const f0=LH*3*k*.3;const mc=document.createElement('canvas').getContext('2d');mc.font='800 100px "Arial Black",Arial,sans-serif';const wr=mc.measureText('JIMMI').width/100,hr=.78;const hx=Math.max(4,Math.min(s.x-rx,rx+rw-s.x))*.86,hy=Math.max(4,Math.min(s.y-ry,ry+rh-s.y))*.86;const fit=Math.min(hx*2/(wr*c+hr*sn),hy*2/(wr*sn+hr*c));const f=Math.max(6,Math.min(f0,fit));return {a,f,w:wr*f,h:hr*f};}
 function dims(s,z){const SW=z&&sleeveWord(s,z);if(SW)return [SW.w,SW.h];if(s.el==='stripe'){const G=stripeGeom(s),k=s.scale||1;return [G.L*k,Math.max(G.T,1)*k];}if(s.el==='text'){const Lo=textLayout(s),k=s.scale||1;return [Math.max(10,Lo.w*k),Math.max(10,Lo.h*k)];}const A=img(),ar=A.body.naturalWidth/A.body.naturalHeight||0.93,war=A.word.naturalHeight/A.word.naturalWidth||0.39,k=s.scale;
- if(s.el==='word')return [WW*k,WW*war*k];if(s.el==='combo'){const w=Math.max(LH*ar,WW*.8);return [w*k,(LH+WW*.8*war+6)*k];}if(s.el==='hair')return [LH*.6*k,LH*.6*k*112/185];const I=n=>A[n].naturalWidth/A[n].naturalHeight||1;if(s.el==='head')return [LH*.8*I('headBody')*k,LH*.8*k];if(s.el==='skinny')return [LH*I('skinny')*k,LH*k];if(s.el==='leg')return [LH*3*I('leg')*k,LH*3*k];return [LH*ar*k,LH*k];}
+ if(s.el==='word')return [WW*k,WW*war*k];if(s.el==='combo'){const w=Math.max(LH*ar,WW*.8);return [w*k,(LH+WW*.8*war+6)*k];}if(s.el==='hair')return [LH*.6*k,LH*.6*k*112/185];const I=n=>A[n].naturalWidth/A[n].naturalHeight||1;if(EL[s.el]&&EL[s.el].img)return [LH*.6*I(s.el)*k,LH*.6*k];if(s.el==='head')return [LH*.8*I('headBody')*k,LH*.8*k];if(s.el==='skinny')return [LH*I('skinny')*k,LH*k];if(s.el==='leg')return [LH*3*I('leg')*k,LH*3*k];return [LH*ar*k,LH*k];}
 function drawEl(ctx,s,glow,z){const SW=z&&sleeveWord(s,z);if(SW){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(SW.a*Math.PI/180);ctx.font='800 '+SW.f+'px "Arial Black",Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=s.colors.body;ctx.shadowColor=s.colors.body;ctx.shadowBlur=glow*2;ctx.fillText('JIMMI',0,SW.f*.04);ctx.restore();return;}const A=img(),[w,h]=dims(s),cb=s.colors.body,ch=s.colors.hair||cb,t=R._tint;
  ctx.save();ctx.translate(s.x,s.y);ctx.rotate((s.rotation||0)*Math.PI/180);
  const L=(x,y,lw,lh,hair)=>{if(hair){ctx.shadowColor=ch;ctx.shadowBlur=glow*lh/40;ctx.drawImage(t(A.hair,ch),x,y,lw,lh);}else{ctx.shadowColor=cb;ctx.shadowBlur=glow*lh/40;ctx.drawImage(t(A.body,cb),x,y,lw,lh);}};
@@ -80,6 +81,7 @@ function drawEl(ctx,s,glow,z){const SW=z&&sleeveWord(s,z);if(SW){ctx.save();ctx.
  else if(s.el==='stripe')drawStripe(ctx,s,cb,glow);
  else if(s.el==='text')drawText(ctx,s,w,h,cb,glow);
  else if(s.el==='head'){ctx.shadowColor=cb;ctx.shadowBlur=glow*h/40;ctx.drawImage(t(A.headBody,cb),-w/2,-h/2,w,h);ctx.shadowColor=ch;ctx.drawImage(t(A.headHair,ch),-w/2,-h/2,w,h);}
+ else if(EL[s.el]&&EL[s.el].img)ctx.drawImage(A[s.el],-w/2,-h/2,w,h);
  else if(s.el==='skinny'||s.el==='leg'){ctx.shadowColor=cb;ctx.shadowBlur=glow*3;ctx.drawImage(t(A[s.el],cb),-w/2,-h/2,w,h);}
  else if(s.el==='word'){ctx.shadowColor=cb;ctx.shadowBlur=glow*3;ctx.drawImage(t(A.word,cb),-w/2,-h/2,w,h);}
  else if(s.el==='combo'){const k=s.scale,ar=A.body.naturalWidth/A.body.naturalHeight,lw=LH*ar*k,lh=LH*k,ww=WW*.8*k,wh=ww*A.word.naturalHeight/A.word.naturalWidth;
