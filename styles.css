@@ -345,3 +345,35 @@ footer {
 .lb-view.z img{max-width:none;max-height:none;width:250%;cursor:zoom-out}
 @media (min-width:900px){.lb-view.z img{width:160%}}
 .lb-hint{text-align:center;color:#aaa;font-size:12px;padding:6px}
+
+/* Sold out */
+.card.sold-out { opacity: 0.78; }
+.card.sold-out .card-img { position: relative; }
+.card-img { position: relative; }
+.sold-badge {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  z-index: 2;
+  background: #c8102e;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px #0008;
+}
+.btn-soldout,
+.btn.btn-soldout {
+  display: inline-block;
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+  background: #3a3a48 !important;
+  color: #bbb !important;
+  border: none;
+  text-decoration: none;
+}
+.card.sold-out .sku s { color: #8a8aa0; }

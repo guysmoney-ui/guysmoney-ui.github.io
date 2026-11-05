@@ -62,3 +62,30 @@ transform:scale(2);transform-origin:bottom left}
 .spec{font-size:12px;color:#cfc6ff;margin-top:8px}
 .studio>*{min-width:0}html,body{overflow-x:hidden}
 .mtop nav{flex-wrap:nowrap;overflow-x:auto;min-width:0}
+
+/* Sold out (mall cards) */
+.pc.sold-out { opacity: 0.78; }
+.pc-img { position: relative; }
+.pc.sold-out .pc-img img { filter: grayscale(0.25); }
+.pc .sold-badge {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  z-index: 2;
+  background: #c8102e;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+}
+.pc .btn-soldout {
+  display: inline-block;
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+  color: #999;
+  text-decoration: none;
+}

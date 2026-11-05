@@ -115,14 +115,16 @@
     const grid = document.getElementById("product-grid");
     const products = window.JIMMI_PRODUCTS || [];
     grid.innerHTML = products.map((p) => `
-      <article class="card">
-        <div class="card-img"><img src="${p.image}?v=20261104k" alt="${p.name}" loading="lazy" /></div>
+      <article class="card${p.soldOut ? ' sold-out' : ''}">
+        <div class="card-img"><img src="${p.image}?v=20261104k" alt="${p.name}" loading="lazy" />${p.soldOut ? '<span class="sold-badge">Sold out</span>' : ''}</div>
         <div class="card-body">
           <div class="card-tag">${p.tag}</div>
           <h3>${p.name}</h3>
           <p>${p.blurb}</p>
-          <div class="sku">${p.price != null ? '$' + p.price : (p.sku || 'Preview · price TBD')}</div>
-          <a class="btn btn-etsy" href="${p.etsyUrl}" target="_blank" rel="noopener noreferrer">Buy on Etsy</a>
+          <div class="sku">${p.price != null ? (p.soldOut ? '<s>$' + p.price + '</s>' : '$' + p.price) : (p.sku || 'Preview · price TBD')}</div>
+          ${p.soldOut
+            ? '<span class="btn btn-etsy btn-soldout" aria-disabled="true">Sold out</span>'
+            : `<a class="btn btn-etsy" href="${p.etsyUrl}" target="_blank" rel="noopener noreferrer">Buy on Etsy</a>`}
         </div>
       </article>
     `).join("");
