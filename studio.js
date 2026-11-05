@@ -14,7 +14,7 @@ paint();
 const P=window.JIMMI_PRODUCTS||[];
 const isW=p=>/Women|leggings|crop|pants/i.test(p.tag+p.id+p.name),isM=p=>/Men'|Men$|· Men|Tee|Long Sleeve|Tracksuit/.test(p.tag)&&!/women/i.test(p.id);
 const lists={mens:P.filter(isM),womens:P.filter(p=>isW(p)||/Tracksuit/.test(p.tag))};
-const card=p=>`<article class="pc"><img src="${p.image}" alt="${p.name}" loading="lazy"><div><small>${p.tag}</small><br><b>${p.name}</b><br><a href="${p.etsyUrl}" target="_blank" rel="noopener">Buy on Etsy</a></div></article>`;
+const card=p=>`<article class="pc"><img src="${p.image}" alt="${p.name}" loading="lazy"><div><small>${p.tag}</small><br><b>${p.name}</b><br><span class="sku">${p.price!=null?'$'+p.price:(p.sku||'')}</span><br><a href="${p.etsyUrl}" target="_blank" rel="noopener">Buy on Etsy</a></div></article>`;
 for(const k in lists){$(`[data-grid=${k}]`).innerHTML=lists[k].map(card).join('');$(`[data-win=${k}]`).innerHTML=lists[k].slice(0,3).map(p=>`<img src="${p.image}" alt="">`).join('');}
 function route(entering){const v=(location.hash.slice(1)||'studio');const name=['concourse','mens','womens','studio'].includes(v)?v:'studio';
  $$('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+name));$$('.mtop nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===name));
