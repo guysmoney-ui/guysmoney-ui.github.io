@@ -346,34 +346,54 @@ footer {
 @media (min-width:900px){.lb-view.z img{width:160%}}
 .lb-hint{text-align:center;color:#aaa;font-size:12px;padding:6px}
 
-/* Sold out */
-.card.sold-out { opacity: 0.78; }
+/* Sold out — obvious on phone/PWA */
+.card.sold-out { opacity: 1; }
 .card.sold-out .card-img { position: relative; }
 .card-img { position: relative; }
+.card.sold-out .card-img img {
+  filter: grayscale(1) brightness(0.45);
+}
+.sold-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
 .sold-badge {
   position: absolute;
-  top: 0.7rem;
-  left: 0.7rem;
-  z-index: 2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
   background: #c8102e;
   color: #fff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 0.28rem 0.55rem;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px #0008;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 18px #000a;
+  border: 2px solid #fff;
 }
 .btn-soldout,
 .btn.btn-soldout {
   display: inline-block;
-  opacity: 0.55;
+  opacity: 0.7;
   pointer-events: none;
   cursor: not-allowed;
-  background: #3a3a48 !important;
-  color: #bbb !important;
-  border: none;
+  background: #2a2a34 !important;
+  color: #eee !important;
+  border: 1px solid #555 !important;
   text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .card.sold-out .sku s { color: #8a8aa0; }
+.card.sold-out .card-tag::after {
+  content: " · SOLD OUT";
+  color: #ff4d6d;
+  font-weight: 700;
+}
