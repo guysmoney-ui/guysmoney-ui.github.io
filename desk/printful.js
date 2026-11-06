@@ -1,7 +1,7 @@
 /* Printful export: artwork-only transparent PNGs (no garment, no mockup, no background) for upload into Printful's Design Maker.
    Printful docs: PNG/JPEG upload; recoloring uploaded art is not documented, so pick colors HERE before exporting. Nothing is sent to Printful. */
 (function(){const W=window,R=()=>W.JimmiRender,$=s=>document.querySelector(s);
-const PF_URL='https://www.printful.com/dashboard/product-templates';
+const PF_URL='https://www.printful.com/';
 /* --- PNG pHYs (DPI) chunk, pure + unit tested --- */
 const CT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
 function crc(b){let c=0xffffffff;for(const x of b)c=CT[(c^x)&255]^(c>>>8);return (c^0xffffffff)>>>0;}

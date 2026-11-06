@@ -194,6 +194,16 @@
    ],
    "svg": "svg/got-your-jimmies-varsity.svg",
    "note": "9105\u00d7900px transparent PNG = 30.4\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "Back shirt tag \u2014 square banner + round badge",
+   "png": "Jimmi-back-shirt-tag-SQUARE-banner-and-circle.png",
+   "svg": "svg/Jimmi-back-shirt-tag-SQUARE-banner-and-circle.svg",
+   "px": [
+    900,
+    900
+   ],
+   "note": "900\u00d7900px transparent PNG = 3\u00d73 in at 300 dpi. Banner and round badge are raster layers (SVG source embeds them; not pure vector). Check your blank's label/back placement size limits in Printful."
   }
  ]
 }
