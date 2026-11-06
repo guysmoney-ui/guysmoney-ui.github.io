@@ -11,5 +11,5 @@ const o=Buffer.from(P.withDpi(new Uint8Array(png),300));assert.strictEqual(o.sub
 fs.writeFileSync('/tmp/pf-dpi-test.png',o);
 assert.ok(P.quality({srcW:153},2,300).ok===0);assert.ok(P.quality({srcW:3000},10,300).ok===1);assert.ok(P.quality({srcW:null},16,300).ok===1);
 const idx=fs.readFileSync(path.join(D,'index.html'),'utf8'),sw=fs.readFileSync(path.join(D,'sw.js'),'utf8');
-assert.ok(idx.indexOf('printful.js')>idx.indexOf('app.js'));assert.ok(sw.includes("'printful.js'"));assert.ok(!/jimmi-desk-v29'/.test(sw));
+assert.ok(idx.indexOf('printful.js')>idx.indexOf('app.js'));assert.ok(sw.includes("'printful.js'"));assert.ok(!/jimmi-desk-v30'/.test(sw));
 console.log('printful tests OK');

@@ -2,7 +2,7 @@
 import json,os
 from PIL import Image
 D=os.path.join(os.path.dirname(__file__),'..','printful');m=json.load(open(os.path.join(D,'manifest.json')))
-assert len(m['files'])==19
+assert len(m['files'])==20
 for f in m['files']:
   assert 'preview' not in f['png'].lower() and 'contact' not in f['png'].lower()
   im=Image.open(os.path.join(D,f['png']));assert im.mode=='RGBA',f
