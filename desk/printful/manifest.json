@@ -1,0 +1,199 @@
+{
+ "files": [
+  {
+   "name": "Jimmi inside label Etsy icon dark",
+   "png": "Jimmi-inside-label-Etsy-icon-dark.png",
+   "px": [
+    900,
+    339
+   ],
+   "svg": "svg/Jimmi-inside-label-Etsy-icon-dark.svg",
+   "note": "Inside neck label logo, 900\u00d7339px = 3\u00d71.13 in at 300 dpi (Printful inside-label logo area). Printful adds size/fiber text itself."
+  },
+  {
+   "name": "Jimmi inside label Etsy icon light",
+   "png": "Jimmi-inside-label-Etsy-icon-light.png",
+   "px": [
+    900,
+    339
+   ],
+   "svg": "svg/Jimmi-inside-label-Etsy-icon-light.svg",
+   "note": "Inside neck label logo, 900\u00d7339px = 3\u00d71.13 in at 300 dpi (Printful inside-label logo area). Printful adds size/fiber text itself."
+  },
+  {
+   "name": "head body",
+   "png": "LIMITED-head-body.png",
+   "px": [
+    2227,
+    2400
+   ],
+   "svg": "svg/head-body.svg",
+   "limited": 1,
+   "note": "2227\u00d72400px, upscaled from a tiny 142\u00d7153px original: will print soft. Keep small (\u22481 in) or use the color picker below at small size."
+  },
+  {
+   "name": "head hair",
+   "png": "LIMITED-head-hair.png",
+   "px": [
+    2227,
+    2400
+   ],
+   "svg": "svg/head-hair.svg",
+   "limited": 1,
+   "note": "2227\u00d72400px, upscaled from a tiny 142\u00d7153px original: will print soft. Keep small (\u22481 in) or use the color picker below at small size."
+  },
+  {
+   "name": "jimmi down the leg",
+   "png": "LIMITED-jimmi-down-the-leg.png",
+   "px": [
+    370,
+    2400
+   ],
+   "svg": "svg/jimmi-down-the-leg.svg",
+   "limited": 1,
+   "note": "370\u00d72400px, upscaled from a tiny 139\u00d7901px original: will print soft. Keep small (\u22481 in) or use the color picker below at small size."
+  },
+  {
+   "name": "jimmi head",
+   "png": "LIMITED-jimmi-head.png",
+   "px": [
+    2227,
+    2400
+   ],
+   "svg": "svg/jimmi-head.svg",
+   "limited": 1,
+   "note": "2227\u00d72400px, upscaled from a tiny 142\u00d7153px original: will print soft. Keep small (\u22481 in) or use the color picker below at small size."
+  },
+  {
+   "name": "skinny jimmi",
+   "png": "LIMITED-skinny-jimmi.png",
+   "px": [
+    2211,
+    2400
+   ],
+   "svg": "svg/skinny-jimmi.svg",
+   "limited": 1,
+   "note": "2211\u00d72400px, upscaled from a tiny 503\u00d7546px original: will print soft. Keep small (\u22481 in) or use the color picker below at small size."
+  },
+  {
+   "name": "got your jimmies arched print",
+   "png": "got-your-jimmies-arched-print.png",
+   "px": [
+    3428,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-arched-print.svg",
+   "note": "3428\u00d7900px transparent PNG = 11.4\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "got your jimmies arched",
+   "png": "got-your-jimmies-arched.png",
+   "px": [
+    3428,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-arched.svg",
+   "note": "3428\u00d7900px transparent PNG = 11.4\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "got your jimmies condensed",
+   "png": "got-your-jimmies-condensed.png",
+   "px": [
+    5497,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-condensed.svg",
+   "note": "5497\u00d7900px transparent PNG = 18.3\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "got your jimmies dipped print",
+   "png": "got-your-jimmies-dipped-print.png",
+   "px": [
+    5458,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-dipped-print.svg",
+   "note": "5458\u00d7900px transparent PNG = 18.2\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "got your jimmies dipped",
+   "png": "got-your-jimmies-dipped.png",
+   "px": [
+    5458,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-dipped.svg",
+   "note": "5458\u00d7900px transparent PNG = 18.2\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "got your jimmies neon",
+   "png": "got-your-jimmies-neon.png",
+   "px": [
+    7728,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-neon.svg",
+   "note": "7728\u00d7900px transparent PNG = 25.8\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "got your jimmies on \u2014 letters only, no backing black",
+   "png": "got-your-jimmies-on-TEXT-ONLY-black.png",
+   "px": [
+    7865,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-on-TEXT-ONLY-black.svg",
+   "note": "7865\u00d7900px transparent PNG = 26.2\u00d73.0 in at 300 dpi. Letters only, transparent, no white backing."
+  },
+  {
+   "name": "got your jimmies on \u2014 letters only, no backing red",
+   "png": "got-your-jimmies-on-TEXT-ONLY-red.png",
+   "px": [
+    7865,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-on-TEXT-ONLY-red.svg",
+   "note": "7865\u00d7900px transparent PNG = 26.2\u00d73.0 in at 300 dpi. Letters only, transparent, no white backing."
+  },
+  {
+   "name": "got your jimmies on \u2014 letters only, no backing white",
+   "png": "got-your-jimmies-on-TEXT-ONLY-white.png",
+   "px": [
+    7865,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-on-TEXT-ONLY-white.svg",
+   "note": "7865\u00d7900px transparent PNG = 26.2\u00d73.0 in at 300 dpi. Letters only, transparent, no white backing."
+  },
+  {
+   "name": "got your jimmies script",
+   "png": "got-your-jimmies-script.png",
+   "px": [
+    4614,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-script.svg",
+   "note": "4614\u00d7900px transparent PNG = 15.4\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "got your jimmies typewriter",
+   "png": "got-your-jimmies-typewriter.png",
+   "px": [
+    7286,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-typewriter.svg",
+   "note": "7286\u00d7900px transparent PNG = 24.3\u00d73.0 in at 300 dpi. Original die-cut colors."
+  },
+  {
+   "name": "got your jimmies varsity",
+   "png": "got-your-jimmies-varsity.png",
+   "px": [
+    9105,
+    900
+   ],
+   "svg": "svg/got-your-jimmies-varsity.svg",
+   "note": "9105\u00d7900px transparent PNG = 30.4\u00d73.0 in at 300 dpi. Original die-cut colors."
+  }
+ ]
+}

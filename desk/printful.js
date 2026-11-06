@@ -49,8 +49,8 @@ function build(m){const L=m.querySelector('#pfList'),items=catalog(),dpi=()=>+m.
  const fname=(it,inch)=>`jimmi-${it.id}-${inch}in-${dpi()}dpi.png`;
  const paint=row=>{const {it,col,inch}=rowSt(row),q=quality(it,inch,dpi()),pc=row.querySelector('.pfPrev'),cv=render(it,col,600),c=pc.getContext('2d');c.clearRect(0,0,140,100);if(cv){const k=Math.min(130/cv.width,90/cv.height);c.drawImage(cv,70-cv.width*k/2,50-cv.height*k/2,cv.width*k,cv.height*k);}
   const qe=row.querySelector('.pfQ');qe.textContent=q.t+` → ${Math.round(inch*dpi())}px long side.`;qe.classList.toggle('warn',!q.ok);};
- L.querySelectorAll('.pfRow').forEach(paint);
- L.addEventListener('input',e=>{const r=e.target.closest('.pfRow');if(r)paint(r);});m.querySelector('#pfDpi').onchange=()=>L.querySelectorAll('.pfRow').forEach(paint);
+ const safe=r=>{try{paint(r);}catch(e){r.querySelector('.pfQ').textContent='Preview unavailable: '+e.message;}};L.querySelectorAll('.pfRow').forEach(safe);
+ L.addEventListener('input',e=>{const r=e.target.closest('.pfRow');if(r)safe(r);});m.querySelector('#pfDpi').onchange=()=>L.querySelectorAll('.pfRow').forEach(paint);
  L.addEventListener('click',async e=>{const b=e.target.closest('.pfDl');if(!b)return;const row=b.closest('.pfRow'),{it,col,inch}=rowSt(row);b.disabled=true;try{const f=await pngFile(it,col,inch,dpi());save(f.blob,fname(it,inch));W.__pfLast={name:fname(it,inch),w:f.w,h:f.h,size:f.blob.size};}catch(err){alert('Export failed: '+err.message);}b.disabled=false;});
  /* drag-out: Chrome-only DownloadURL; everything else falls back to ⬇️ PNG */
  L.addEventListener('dragstart',e=>{const row=e.target.closest('.pfRow');if(!row)return;const {it,col,inch}=rowSt(row),cv=render(it,col,Math.min(Math.round(inch*dpi()),3000));if(!cv)return;try{e.dataTransfer.setData('DownloadURL','image/png:'+fname(it,inch)+':'+cv.toDataURL('image/png'));}catch(_){}});
