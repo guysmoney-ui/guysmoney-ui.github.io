@@ -8,6 +8,12 @@ W.document=doc;
 const run=f=>new Function('window','document','Image','Path2D',fs.readFileSync(path.join(D,f),'utf8'))(W,doc,Image,Path2D);
 ['assets.js','assets2.js','gyj.js','fonts.js','render.js','tee-render.js','printful.js'].forEach(run);
 const R=W.JimmiRender,P=W.JIMMI_PRINTFUL,out=process.env.OUT||'/tmp/pf-real';fs.mkdirSync(out,{recursive:true});
+/* Node-only harness speed-up: @napi-rs/canvas copies the WHOLE source canvas on every canvas->canvas drawImage (~160 ms for the 2400x4896 seat zone,
+   x thousands of row draws = ~400 s; browser export of the same code was ~1.6 s). For large canvas sources, copy only the requested source rect (+2 px pad)
+   into a small canvas and draw from it at the same fractional offset: same pixels sampled, same destination. Production printful.js is unchanged. */
+{const C2=Object.getPrototypeOf(createCanvas(1,1).getContext('2d')),orig=C2.drawImage;C2.drawImage=function(src,...a){if(a.length===8&&src&&typeof src.toBuffer==='function'&&src.width*src.height>4e5){
+ const [sx,sy,sw,sh,dx,dy,dw,dh]=a,x0=Math.max(0,Math.floor(sx)-2),y0=Math.max(0,Math.floor(sy)-2),x1=Math.min(src.width,Math.ceil(sx+sw)+2),y1=Math.min(src.height,Math.ceil(sy+sh)+2);if(x1<=x0||y1<=y0)return;
+ const t=createCanvas(x1-x0,y1-y0);t.getContext('2d').putImageData(src.getContext('2d').getImageData(x0,y0,x1-x0,y1-y0),0,0);return orig.call(this,t,sx-x0,sy-y0,sw,sh,dx,dy,dw,dh);}return orig.call(this,src,...a);};}
 const px=(c,x,y)=>[...c.getContext('2d').getImageData(Math.round(x),Math.round(y),1,1).data];
 (async()=>{const A=W.JIMMI_ASSETS;W.JIMMI_IMG={};for(const k in A){const i=new Image();const s=A[k];i.src=s.startsWith('data:')?Buffer.from(s.split(',')[1],'base64'):fs.readFileSync(path.join(D,s));W.JIMMI_IMG[k]=i;}await new Promise(r=>setTimeout(r,200));
  // leggings: base navy, red triple side stripe, yellow logo on left leg (default), head on right leg, word on seat, word on waistband
