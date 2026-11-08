@@ -21,5 +21,8 @@ console.log('printful tests OK');
  assert.ok(!/(token|apikey|api_key|Bearer)\s*[:=]\s*['"][A-Za-z0-9_]{8,}/i.test(src),'no secrets');
  assert.ok(/#pfModal #pfClose\{position:sticky/.test(src),'close button sticky');assert.ok(sw.includes("jimmi-desk-v32"));
  console.log('placement export tests OK');}
-{const Y=P.YOGA;assert.deepStrictEqual([Y.W,Y.H,Y.bands.front.W,Y.bands.front.H,Y.bands.back.W,Y.bands.back.H],[7050,6150,3000,1050,2400,900]);assert.strictEqual(P.LEG_PROFILES.length,2);
+{const Y=P.YOGA;assert.deepStrictEqual([Y.W,Y.H,Y.bands.front.W,Y.bands.front.H,Y.bands.back.W,Y.bands.back.H],[7050,6150,3000,1050,2400,900]);assert.strictEqual(P.LEG_PROFILES.length,5);
  for(const p of ['right','left']){const xs=P.xsAt(Y.safe[p],3000);assert.ok(xs[0]<Y.cx[p]&&Y.cx[p]<xs[1]);}assert.ok(/AOP_Yoga_leggings_guideline\.zip/.test(Y.tpl));console.log('yoga profile tests OK');}
+{const S=P.SHORTS;assert.deepStrictEqual([S.W,S.H,S.dpi,S.cx.right,S.cx.left],[8400,3300,150,2382,6012]);assert.strictEqual(P.LEG_PROFILES.filter(p=>p.garment==='shorts').length,1);for(const p of ['right','left']){const xs=P.xsAt(S.safe[p],2000);assert.ok(xs[0]<S.cx[p]&&S.cx[p]<xs[1]);}console.log('shorts profile tests OK');}
+for(const S of [P.JOGM,P.JOGW]){assert.deepStrictEqual([S.W,S.H,S.split,S.dpi,S.garment],[9900,7500,4950,150,'joggers']);for(const p of ['right','left']){const xs=P.xsAt(S.safe[p],3000);assert.ok(xs[0]<S.cx[p]&&S.cx[p]<xs[1]);}}
+assert.notDeepStrictEqual(P.JOGM.cx,P.JOGW.cx);assert.notDeepStrictEqual(P.JOGM.fold,P.JOGW.fold);console.log('jogger profile tests OK');
