@@ -6,7 +6,7 @@ const doc={querySelector:()=>null,createElement:()=>({}),head:{appendChild(){}},
 new Function('window','document',fs.readFileSync(path.join(D,'printful.js'),'utf8'))(W,doc);const P=W.JIMMI_PRINTFUL,src=fs.readFileSync(path.join(D,'printful.js'),'utf8');
 (async()=>{
  // dormant by default: not enabled, empty origin, no secrets
- assert.strictEqual(P.BRIDGE.enabled,false);assert.strictEqual(P.BRIDGE.origin,'');assert.ok(!P.bridgeOn());
+ assert.strictEqual(P.BRIDGE.enabled,false);assert.strictEqual(P.BRIDGE.origin,'https://jimmi-printful-bridge.jimmys-gym-shop.workers.dev');assert.ok(!P.bridgeOn(),'disabled until release gate');
  assert.ok(!/OWNER_KEY|SESSION_SECRET|PRINTFUL_TOKEN|Bearer |localStorage\.setItem\([^)]*(token|secret)/i.test(src),'no secrets');
  await assert.rejects(P.bridgeSend(()=>null),/not set up/);assert.strictEqual(log.length,0,'no popup when dormant');
  // guard: only standard AOP leggings

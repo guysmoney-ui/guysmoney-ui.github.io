@@ -260,7 +260,7 @@ const st=document.createElement('style');st.textContent=`#pfModal .box{max-heigh
    Contract = /workspace/jimmi-printful-bridge src/protocol.mjs + client-adapter.mjs, with one change: the popup is opened synchronously in the click
    BEFORE the async PNG export, and the design is posted once both the popup said jimmi:ready and the PNG is built.
    No secrets here: owner login lives only in the bridge origin's HttpOnly cookie. Nothing is stored in localStorage or URLs except the one-time nonce. */
-const BRIDGE={enabled:false,origin:'',profile:'standard-aop-leggings-7200x6225-v1',renderHosts:['files.cdn.printful.com','printful-upload.s3-accelerate.amazonaws.com'],timeoutMs:25*60*1000};
+const BRIDGE={enabled:false,origin:'https://jimmi-printful-bridge.jimmys-gym-shop.workers.dev',profile:'standard-aop-leggings-7200x6225-v1',renderHosts:['files.cdn.printful.com','printful-upload.s3-accelerate.amazonaws.com'],timeoutMs:25*60*1000};
 const bridgeOn=()=>!!(BRIDGE.enabled&&/^https:\/\/[a-z0-9.-]+$/.test(BRIDGE.origin)&&new URL(BRIDGE.origin).origin===BRIDGE.origin);
 let legChoice='aop',bridgeBusy=null;const bridgeDone={};
 const isStdLeg=d=>!!(d&&d.editor==='tee'&&(d.garment||'leggings')==='leggings'&&legChoice==='aop');
