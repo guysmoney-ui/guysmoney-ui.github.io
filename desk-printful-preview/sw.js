@@ -1,0 +1,4 @@
+const V='jimmi-desk-v32',F=['./','index.html','app.css','app.js','render.js','tee-render.js','assets.js','assets2.js','gyj.js','fonts.js','printful.js','printful/manifest.json','inbox/inbox.js','inbox/index.json','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/icon-maskable-512.png','icons/jimmi-round.ico'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(V).then(c=>c.addAll(F)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{if(r.ok&&!e.request.headers.has('range')){const c=r.clone();caches.open(V).then(x=>x.put(e.request,c));}return r;}).catch(()=>caches.match(e.request,{ignoreSearch:true})));});

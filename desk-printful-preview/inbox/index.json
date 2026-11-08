@@ -1,0 +1,33 @@
+{
+  "updated": "2026-10-30T08:57:06-06:00",
+  "designs": [
+    {
+      "file": "a1-navy-yellow.jimmi.json",
+      "name": "A1 Navy & Yellow",
+      "notes": "Full-length, wordmark down the leg, logo on the calf.",
+      "base": "#14204a",
+      "accent": "#ffd400"
+    },
+    {
+      "file": "a2-black-red.jimmi.json",
+      "name": "A2 Black & Red",
+      "notes": "7/8 length, thin red side stripe, logo on the hip a third smaller.",
+      "base": "#111114",
+      "accent": "#c8102e"
+    },
+    {
+      "file": "a4-teal-coral.jimmi.json",
+      "name": "A4 Teal & Coral",
+      "notes": "Logo on the thigh at half size; wordmark on the lower leg unchanged.",
+      "base": "#0f8f8c",
+      "accent": "#ff6f61"
+    },
+    {
+      "file": "a5-cobalt-orange.jimmi.json",
+      "name": "A5 Cobalt & Orange",
+      "notes": "7/8 length, wordmark on the thigh, logo near the knee, orange side stripe.",
+      "base": "#1f4fd1",
+      "accent": "#ff7a00"
+    }
+  ]
+}
