@@ -21,6 +21,14 @@ const px=(c,x,y)=>[...c.getContext('2d').getImageData(Math.round(x),Math.round(y
  const wht=(r,g,b)=>r>230&&g>230&&b>230,grn=(r,g,b)=>g>200&&r<80&&b<80,red=(r,g,b)=>r>180&&g<40&&b<60,BASE=[0x14,0x20,0x4a],AT=P.AOPTEE;
  // default design art (whatever the tee starts with) is preserved on the front file
  {const d0=R.makeEditor('tee',{designer:{name:'t',role:'owner'}});d0.colors.base='#14204a';const k=Object.keys(d0.zones).filter(z=>(d0.zones[z]||[]).length);for(const z of k.filter(z=>AT.pieces[z])){const c=P.aopTeeFile(d0,z).canvas,[x0,y0,x1,y1]=AT.pieces[z].safe;assert.ok(reg(c,x0,y0,x1,y1,(r,g,b)=>Math.abs(r-0x14)+Math.abs(g-0x20)+Math.abs(b-0x4a)>60)>20,'default art kept on '+z);}console.log('default art zones',k.join(','));}
+ // relative placement: full zone canvas is scaled (no alpha-bounds compaction), so two far-apart stickers keep their relative positions
+ {const d=R.makeEditor('tee',{designer:{name:'t',role:'owner'}});for(const z in d.zones)d.zones[z]=[];d.colors.base='#14204a';const Z=R.ZONES.front,[rx,ry,rw,rh]=Z.rect;
+  const a=R.sticker('head',{body:'#ffffff',hair:'#ffffff'},'front'),b=R.sticker('word',{body:'#00ff00'},'front');a.x=rx+rw*.25;a.y=ry+rh*.2;b.x=rx+rw*.75;b.y=ry+rh*.8;d.zones.front.push(a,b);
+  const c=P.aopTeeFile(d,'front').canvas,[x0,y0,x1,y1]=AT.pieces.front.safe,k=Math.min((x1-x0)/rw,(y1-y0)/rh),ox=Math.round((x0+x1-rw*k)/2);
+  const cen=f=>{const g=c.getContext('2d').getImageData(0,0,4200,5400).data;let sx=0,sy=0,n=0;for(let y=0;y<5400;y+=4)for(let x=0;x<4200;x+=4){const i=(y*4200+x)*4;if(f(g[i],g[i+1],g[i+2])){sx+=x;sy+=y;n++;}}return [sx/n,sy/n];};
+  const A1=cen(wht),B1=cen(grn),exp=(X,Y)=>[ox+(X-rx)*k,y0+(Y-ry)*k],EA=exp(a.x,a.y),EB=exp(b.x,b.y);
+  for(const [g,e,nm] of [[A1,EA,'upper-left'],[B1,EB,'lower-right']])assert.ok(Math.hypot(g[0]-e[0],g[1]-e[1])<k*25,`${nm} sticker kept relative spot: got ${g.map(Math.round)} want ${e.map(Math.round)}`);
+  console.log('relative placement OK',A1.map(Math.round),B1.map(Math.round),'scale',k.toFixed(2));}
  for(const n of [1,2,3]){const d=R.makeEditor('tee',{designer:{name:'t',role:'owner'}});for(const z in d.zones)d.zones[z]=[];d.colors.base='#14204a';
   d.zones.front.push(R.sticker('head',{body:'#ffffff',hair:'#ffffff'},'front'));d.zones.back.push(R.sticker('word',{body:'#00ff00'},'back'));d.zones.leftSleeve.push(R.sticker('word',{body:'#00ff00'},'leftSleeve'));
   assert.strictEqual(P.sleeveStripes(d,{lines:n,thick:.25,color:'#c8102e'}),2);const t0=Date.now(),F={};
