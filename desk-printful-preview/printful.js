@@ -88,6 +88,50 @@ const JOGM={key:'jogm',garment:'joggers',split:4950,title:'All-Over Print Recycl
 const JOGW={key:'jogw',garment:'joggers',split:4950,title:'All-Over Print Recycled Women’s Joggers',W:9900,H:7500,dpi:150,cx:{"right": 2624, "left": 7275},yTop:1059,yBot:6122,stripeTop:0,stripeBot:6479,
  safe:{"right":[[1422,848],[1311,1643],[1300,1682],[1279,1845],[1241,2052],[1189,2234],[1134,2375],[1101,2436],[1051,2508],[965,2598],[965,2627],[972,2661],[1117,2957],[1232,3235],[1351,3576],[1458,3945],[1540,4285],[1635,4741],[1762,5477],[1845,6033],[2144,6033],[2186,6038],[2252,6070],[2298,6124],[2698,6121],[3346,6147],[3407,5529],[3481,4884],[3555,4328],[3567,4278],[3610,3973],[3688,3576],[3778,3226],[3884,2888],[4001,2583],[4005,2524],[3919,2442],[3854,2338],[3817,2244],[3781,2102],[3760,1918],[3755,1622],[3763,1433],[3786,1186],[3715,1171],[2865,1053],[2778,1036],[2679,1036],[2615,1014],[1633,875],[1585,863],[1492,850]],"left":[[8476,846],[8437,846],[8286,872],[8240,874],[8159,890],[7899,923],[7862,933],[7602,966],[7565,976],[7305,1009],[7218,1037],[7100,1039],[6115,1182],[6116,1247],[6138,1449],[6145,1630],[6142,1880],[6122,2093],[6107,2167],[6054,2321],[6003,2412],[5899,2535],[5899,2566],[5907,2607],[5974,2772],[6054,3000],[6127,3244],[6212,3584],[6293,3991],[6405,4772],[6487,5474],[6542,6037],[6837,6037],[6879,6042],[6945,6074],[6990,6127],[7421,6120],[8036,6139],[8113,5668],[8126,5557],[8250,4818],[8319,4469],[8435,3973],[8543,3595],[8658,3262],[8772,2981],[8853,2805],[8937,2644],[8934,2587],[8888,2550],[8843,2501],[8786,2414],[8761,2364],[8710,2231],[8669,2091],[8601,1721]]},fold:{"right":[[800,454.2],[4150,844.1]],"left":[[5750,841.9],[9100,458.2]]},bandH:280,z:LEG.z,inferredSide:true,
  url:'https://www.printful.com/dashboard/custom/womens/sweatpants-joggers/all-over-print-recycled-womens-joggers',tpl:'https://printful.s3-accelerate.amazonaws.com/upload/guideline/AOP_Womens_Joggers_Guideline.zip'};
+
+/* Authentic Printful profile: All-Over Print Men's Crew Neck T-Shirt (API 257, cut & sew). NOT Bella+Canvas 3001 / DTG tee (those stay on the DRAFT/manual zone flow above).
+   Guideline zip AOP_Mens_Crew_neck_guideline.zip (sha256 1b0762ee…): PDF says FRONT and BACK 28x36 in, SLEEVES 20x12 in, >=150 dpi.
+   Cut&Sew_Tshirt_{Front,Back}.png 4200x5400 @150, {Left,Right}_Sleeve.png 3000x1800 @150 (measured). Safe areas = red dashed outlines measured per piece:
+   front rect 1028..3174 x 1412..5028, back rect 1051..3148 x 949..5036; sleeves (identical, mirrored labels) pentagon with curved cap, apex (1506,300).
+   Hem folding line: body y~5259, sleeve y 1637. The FRONT file also holds the collar strip (top-left): base color only.
+   Sleeve outer-arm axis = vertical through the sleeve-cap apex (cut-line top x=1500, safe apex x=1506; the piece is symmetric) — the shoulder point, from template marks. */
+const AOPTEE={key:'aoptee257',title:"AOP Crew Neck 257 — All-Over Print Men's Crew Neck T-Shirt",dpi:150,
+ url:'https://www.printful.com/dashboard/custom/mens/all-over-shirts/all-over-print-mens-crew-neck',tpl:'AOP_Mens_Crew_neck_guideline.zip',
+ pieces:{front:{W:4200,H:5400,zone:'front',safe:[1028,1412,3174,5028]},back:{W:4200,H:5400,zone:'back',safe:[1051,949,3148,5036]},
+  leftSleeve:{W:3000,H:1800,zone:'leftSleeve',safe:[1057,500,1943,1340],axis:1502,poly:[[2646,1030],[2492,1343],[498,1343],[358,1025],[1205,389],[1369,317],[1506,300],[1644,321],[1789,386]]},
+  rightSleeve:{W:3000,H:1800,zone:'rightSleeve',safe:[1057,500,1943,1340],axis:1502,poly:[[2646,1030],[2492,1343],[498,1343],[358,1025],[1205,389],[1369,317],[1506,300],[1644,321],[1789,386]]}}};
+function aopTeeFile(d,k,o,PR){o=o||{};PR=PR||AOPTEE;const r=R(),P=PR.pieces[k],c=document.createElement('canvas');c.width=P.W;c.height=P.H;const x=c.getContext('2d'),notes=[],base=d.colors&&d.colors.base;
+ if(o.base!==false&&base){x.fillStyle=base;x.fillRect(0,0,P.W,P.H);}
+ const fit=(z,box,axis,arr)=>{const [x0,y0,x1,y1]=box,Z=r.ZONES[z],[,,rw,rh]=Z.rect,kk=Math.min((x1-x0)/rw,(y1-y0)/rh),w=Math.round(rw*kk),h=Math.round(rh*kk);
+  const dd=Object.assign({},d,{zones:Object.assign({},d.zones,{[z]:arr})}),src=zoneArt(dd,z,{w,h});x.drawImage(src,Math.round(axis!=null?axis-w/2:(x0+x1-w)/2),y0,w,h);};
+ const all=P.zone?(d.zones[P.zone]||[]):[],stripes=all.filter(q=>q.slvStripe),art=all.filter(q=>!q.slvStripe);
+ if(art.length){fit(P.zone,P.safe,P.axis,art);notes.push(`${r.ZONES[P.zone].n} art: the whole zone (sticker spacing kept) scaled to fit the safe area, top-aligned, centered${P.axis!=null?' on the outer-arm axis':''}.`);}
+ for(const B of P.bands||[]){const a=d.zones[B.zone]||[];if(a.length){fit(B.zone,B.rect,null,a);notes.push(`${r.ZONES[B.zone].n} art fitted into the separate hem-band piece (approximate).`);}}
+ if(stripes.length&&P.axis!=null){const s=stripes[stripes.length-1],n=[1,2,3].includes(+s.lines)?+s.lines:1,w=Math.round((+s.thick||.25)*150),gap=Math.max(w,Math.round(150/16)),T=n*w+(n-1)*gap,[ya,yb]=P.stripeY||[0,P.H];x.fillStyle=(s.colors&&s.colors.body)||s.color||'#ffffff';
+  for(let i=0;i<n;i++)x.fillRect(Math.round(P.axis-T/2+i*(w+gap)),ya,w,yb-ya);notes.push(`Sleeve stripe ×${n} runs from the shoulder point down the outer arm (vertical through the sleeve-cap apex)${P.stripeY?' to the sleeve end; the separate cuff gets base color only':' to the hem'}.`);}
+ if(P.baseOnly)notes.push(P.baseOnly);
+ return {canvas:c,notes};}
+function aopTeeSection(host,d,nm,PR){PR=PR||AOPTEE;const div=document.createElement('div');div.className='pfAop';const ks=Object.keys(PR.pieces);
+ div.innerHTML=`<h5>Or: ${esc(PR.title)}</h5><p class="hint">Only for Printful's <b>${PR===AOPHOOD?'All-Over Print Recycled Unisex Hoodie (388)':'All-Over Print Men\'s Crew Neck T-Shirt (257)'}</b>, not a regular ${PR===AOPHOOD?'hoodie':'printed tee'}. ${ks.length} full-bleed 150 dpi files from the official template: base color everywhere, your art fitted inside each piece's safe area. Printful can't guarantee exact placement or seam alignment; check the 3D preview.</p>
+ <p class="hint warn">UNVERIFIED fit: these files follow the official template's measured safe areas, but they haven't been checked in Printful's 3D view yet. Only for Printful product ${PR===AOPHOOD?'388':'257'}; they don't fit a regular DTG blank. The whole design zone is scaled and top-aligned, so sticker spacing is kept but the position won't exactly match the app's shirt mockup. Sleeve stripes follow a line through the sleeve-cap peak, inferred from the template (DRAFT until checked in 3D).${PR===AOPHOOD?' Hood, pocket and the physical label panel get the base color only; front art behind the pocket may be covered by it.':''}</p>
+ ${ks.map(k=>`<button class="hot pfAopB" data-k="${k}">⬇️ ${k} (${PR.pieces[k].W}×${PR.pieces[k].H})</button>`).join(' ')}`;host.appendChild(div);
+ div.querySelectorAll('.pfAopB').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const k=b.dataset.k,o=aopTeeFile(d,k,{},PR),P=PR.pieces[k];await savePng(o.canvas,`jimmi-${nm}-printful-${PR===AOPHOOD?'aop-hoodie-388':'aop-crew-257'}-${kebab(k)}-${P.W}x${P.H}-150dpi.png`,150);}catch(e){alert('Export failed: '+e.message);}b.disabled=false;});}
+
+/* Authentic Printful profile: All-Over Print Recycled Unisex Hoodie (API 388). NOT Gildan 18500 / SS4500 (those stay on the DRAFT/manual zone flow).
+   Zip AOP_Hoodie_customer_template.zip (sha256 bb70c84c…): PDF "front, back and pocket" 40x40 in, "sleeves and hood" 40x40 in. 7 files, each 6000x6000 @150 (measured).
+   Measured per piece (red dashed safe + grey cut outlines): front cut 509..5491 x 35..4787, safe sides x~1310..4686 from y~800 to 4170 (neckline top not traced: art box starts y 1100, conservative);
+   back safe x~1315..4685, y 487..4596 (art box y 900..4580); separate hem band piece on front & back files 607..5393 x 4912..5852; pocket cut 1254..4752 x 2114..3886;
+   sleeves identical: cut 1067..4936 x 554..4412, cap apex x~3000 y 851, cuff piece 2199..3801 x 4511..5446 (center x 3000) -> outer-arm axis x=3000 (cap apex and cuff center agree);
+   hood = 4 pieces (inside/outside), label_panel = physical sewn panel (NOT the 375x150 inside-label artwork). */
+const AOPHOOD={key:'aophood388',title:"AOP Hoodie 388 — All-Over Print Recycled Unisex Hoodie",dpi:150,
+ url:'https://www.printful.com/dashboard/custom/mens/hoodies/all-over-print-recycled-unisex-hoodie',tpl:'AOP_Hoodie_customer_template.zip',
+ pieces:{front:{W:6000,H:6000,zone:'front',safe:[1340,1100,4660,4160],bands:[{zone:'hemFront',rect:[667,4972,5333,5792]}]},
+  back:{W:6000,H:6000,zone:'back',safe:[1360,900,4640,4580],bands:[{zone:'hemBack',rect:[667,4972,5333,5792]}]},
+  pocket:{W:6000,H:6000,zone:null,safe:[2240,2990,3760,3640],baseOnly:'Pocket: base color only. The app has no pocket zone, so no art is placed on it (front art under the pocket is covered).'},
+  leftArm:{W:6000,H:6000,zone:'leftArm',safe:[2170,1300,3830,4060],axis:3000,stripeY:[0,4440]},
+  rightArm:{W:6000,H:6000,zone:'rightArm',safe:[2170,1300,3830,4060],axis:3000,stripeY:[0,4440]},
+  hood:{W:6000,H:6000,zone:null,safe:null,baseOnly:'Hood: base color only (the app has no hood zone).'},
+  labelPanel:{W:6000,H:6000,zone:null,safe:null,baseOnly:'Label panel (physical sewn panel): base color only. This is not the 375×150 inside-label art.'}}};
 const LEG_PROFILES=[LEG,YOGA,SHORTS,JOGM,JOGW];
 function xsAt(poly,Y){const xs=[];for(let i=0;i<poly.length;i++){const [x1,y1]=poly[i],[x2,y2]=poly[(i+1)%poly.length];if((y1<=Y&&y2>Y)||(y2<=Y&&y1>Y))xs.push(x1+(Y-y1)*(x2-x1)/(y2-y1));}return xs.length?[Math.min(...xs),Math.max(...xs)]:null;}
 const foldY=(L,x)=>L[0][1]+(x-L[0][0])*(L[1][1]-L[0][1])/(L[1][0]-L[0][0]),foldA=L=>Math.atan2(L[1][1]-L[0][1],L[1][0]-L[0][0]);
@@ -149,6 +193,7 @@ function designSection(m){const host=m.querySelector('#pfDesign'),J=W.__jimmi,d=
  if(!d||d.editor!=='tee'){host.innerHTML='<p class="hint">Open a design in the Tee, Hoodie or Leggings editor to export its print files.</p>';return;}
  const g=d.garment||'tee',nm=slug(d.name);
  if(g==='leggings'||g==='shorts'||g==='joggers')return legSection(host,d,nm);
+ if(g==='tee'||g==='hoodie')setTimeout(()=>{try{aopTeeSection(host,d,nm,g==='hoodie'?AOPHOOD:AOPTEE);}catch(e){}},0);
  const prods=PRODUCTS[g]||[],sel=prods[0],zones=r.zk(d).filter(z=>(d.zones[z]||[]).length);
  host.innerHTML=`<h5>This design → Printful</h5>
  <p class="hint">One transparent PNG per print area of <b>${esc(d.name||'this design')}</b>: artwork only, never the shirt picture. ${sel?`Product: <b>${esc(sel.n)}</b>. The shirt color is picked in Printful; a PNG can't recolor the blank.`:`<span class="warn">No verified Printful product for "${esc(g)}": drafts only, place manually.</span>`}</p>
@@ -211,7 +256,7 @@ function sleeveStripeUI(){const tp=document.querySelector('#teePanel');if(!tp||d
   const o={color:b.querySelector('#pfSlvC').value,lines:+b.querySelector('#pfSlvN').value,thick:+b.querySelector('#pfSlvT').value};const n=sleeveStripes(d,o);if(!n){alert('This garment has no sleeve zones.');return;}J.commit();};}
 
 const st=document.createElement('style');st.textContent=`#pfModal .box{max-height:calc(100dvh - 24px);overflow:auto;display:flex;flex-direction:column}#pfModal #pfClose{position:sticky;bottom:0;align-self:center;z-index:2;flex:none}#pfModal .pfList{max-height:none;overflow:visible}.warn{color:#ffb347}.pfList{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}.pfRow{display:flex;gap:10px;align-items:center;border:1px solid var(--neon,#f0f);border-radius:10px;padding:8px}.pfPrev{width:140px;height:100px;object-fit:contain;flex:none;border-radius:8px;background:repeating-conic-gradient(#2a2340 0 25%,#1a1530 0 50%) 0 0/16px 16px}.pfInfo{flex:1;min-width:0}.pfCtl{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0}.pfCtl input[type=number]{width:70px}.pfQ.warn{color:#ffb347}.pfDl,.pfRow .chip{min-height:44px}`;document.head.appendChild(st);
-W.JIMMI_PRINTFUL={open,SHORTS,JOGM,JOGW,sleeveStripes,LEG,YOGA,LEG_PROFILES,bandFile,xsAt,legPrintFile,legPreview,garmentZone,PRODUCTS,zoneArt,zoneWarnings,srcPx,slug,catalog,render,pngFile,withDpi,crc,quality,PF_URL};
+W.JIMMI_PRINTFUL={open,AOPTEE,AOPHOOD,aopTeeFile,SHORTS,JOGM,JOGW,sleeveStripes,LEG,YOGA,LEG_PROFILES,bandFile,xsAt,legPrintFile,legPreview,garmentZone,PRODUCTS,zoneArt,zoneWarnings,srcPx,slug,catalog,render,pngFile,withDpi,crc,quality,PF_URL};
 document.addEventListener('DOMContentLoaded',()=>{try{sleeveStripeUI();}catch(e){}const sb=$('.stagebar');if(sb&&!$('#pfBtn')){const b=document.createElement('button');b.id='pfBtn';b.textContent='🖨️ Use in Printful';b.title='Download artwork-only transparent PNGs for Printful';b.onclick=open;sb.appendChild(b);}
  const lb=$('#lib .box');if(lb&&!$('#pfBtn2')){const b=document.createElement('button');b.id='pfBtn2';b.className='hot';b.textContent='🖨️ Download these for Printful (transparent PNGs)';b.onclick=()=>{$('#lib').hidden=true;open();};lb.insertBefore(b,$('#libGrid'));}});
 })();
