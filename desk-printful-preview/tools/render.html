@@ -1,0 +1,10 @@
+<!DOCTYPE html><html><body><pre id="out">pending</pre>
+<script src="../assets.js"></script><script src="../assets2.js"></script><script src="../fonts.js"></script><script src="../render.js"></script><script src="../tee-render.js"></script>
+<script>
+const R=JimmiRender,p=new URLSearchParams(location.hash.slice(1)),px=+(p.get('px')||2000);
+function dec(s){return decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))));}
+R.ready(()=>{try{let d=JSON.parse(dec(p.get('d')));const e=R.validate(d);if(e.length)throw new Error(e.join('; '));d=R.upgrade(d);
+ const files={};for(const x of R.exportsOf(d,{px}))files[x.suffix]=x.canvas.toDataURL('image/png');
+ document.getElementById('out').textContent=JSON.stringify({ok:true,files});
+}catch(err){document.getElementById('out').textContent=JSON.stringify({ok:false,error:String(err)});}});
+</script></body></html>
