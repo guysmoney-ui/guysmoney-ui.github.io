@@ -13,3 +13,11 @@ assert.ok(P.quality({srcW:153},2,300).ok===0);assert.ok(P.quality({srcW:3000},10
 const idx=fs.readFileSync(path.join(D,'index.html'),'utf8'),sw=fs.readFileSync(path.join(D,'sw.js'),'utf8');
 assert.ok(idx.indexOf('printful.js')>idx.indexOf('app.js'));assert.ok(sw.includes("'printful.js'"));assert.ok(!/jimmi-desk-v30'/.test(sw));
 console.log('printful tests OK');
+// v32: per-placement design export
+{const PR=P.PRODUCTS;assert.strictEqual(PR.leggings.length,0,'no unverified leggings mappings');const L=P.LEG;assert.deepStrictEqual([L.W,L.H,L.dpi],[7200,6225,150]);for(const p of ['right','left']){const xs=P.xsAt(L.safe[p],3500);assert.ok(xs[0]<L.cx[p]&&L.cx[p]<xs[1],'side line inside safe area');}
+ assert.strictEqual(PR.tee[0].map.leftSleeve,'sleeve_left');assert.strictEqual(PR.hoodie[0].id,146);
+ assert.strictEqual(P.slug('My Teal & Brick Hoodie!'),'my-teal-brick-hoodie');
+ const src=fs.readFileSync(path.join(D,'printful.js'),'utf8');assert.ok(!/api\.printful\.com\/(mockup|store|orders|files)/.test(src.replace(/GET https:\/\/api\.printful\.com\/products/,'')),'no Printful API calls');
+ assert.ok(!/(token|apikey|api_key|Bearer)\s*[:=]\s*['"][A-Za-z0-9_]{8,}/i.test(src),'no secrets');
+ assert.ok(/#pfModal #pfClose\{position:sticky/.test(src),'close button sticky');assert.ok(sw.includes("jimmi-desk-v32"));
+ console.log('placement export tests OK');}
