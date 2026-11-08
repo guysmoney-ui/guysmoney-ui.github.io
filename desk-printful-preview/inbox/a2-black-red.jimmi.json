@@ -1,0 +1,34 @@
+{
+  "schema": "jimmi.design",
+  "version": 1,
+  "name": "A2 Black & Red",
+  "notes": "7/8 length, thin red side stripe, logo on the hip a third smaller.",
+  "author": "JimmiBot",
+  "created": "2026-10-30T08:50:00-06:00",
+  "updated": "2026-10-30T08:50:00-06:00",
+  "garment": "leggings",
+  "view": "front",
+  "colors": {
+    "base": "#111114",
+    "logo": "#c8102e",
+    "hair": "#c8102e",
+    "stripe": "#c8102e",
+    "stripeWidth": 3
+  },
+  "logo": {
+    "placement": "hip",
+    "side": "front",
+    "x": 220,
+    "y": 200,
+    "scale": 0.49
+  },
+  "wordmark": {
+    "placement": "down the leg",
+    "side": "front",
+    "x": 372,
+    "y": 440,
+    "scale": 1.0,
+    "rotation": -84.6,
+    "hidden": false
+  }
+}

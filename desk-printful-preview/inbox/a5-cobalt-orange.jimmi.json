@@ -1,0 +1,34 @@
+{
+  "schema": "jimmi.design",
+  "version": 1,
+  "name": "A5 Cobalt & Orange",
+  "notes": "7/8 length, wordmark on the thigh, logo near the knee, orange side stripe.",
+  "author": "JimmiBot",
+  "created": "2026-10-30T08:50:00-06:00",
+  "updated": "2026-10-30T08:50:00-06:00",
+  "garment": "leggings",
+  "view": "front",
+  "colors": {
+    "base": "#1f4fd1",
+    "logo": "#ff7a00",
+    "hair": "#ff7a00",
+    "stripe": "#ff7a00",
+    "stripeWidth": 7
+  },
+  "logo": {
+    "placement": "custom",
+    "side": "front",
+    "x": 240,
+    "y": 520,
+    "scale": 0.8
+  },
+  "wordmark": {
+    "placement": "custom",
+    "side": "front",
+    "x": 225,
+    "y": 330,
+    "scale": 0.5,
+    "rotation": 0,
+    "hidden": false
+  }
+}
