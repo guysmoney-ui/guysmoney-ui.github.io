@@ -216,7 +216,7 @@ function legSection(host,d,nm){const PROFS=LEG_PROFILES.filter(q=>q.garment===(d
  ${PF.split?`<button class="hot" id="pfJR">⬇️ Right leg file (${PF.split}×${PF.H} PNG)</button> <button class="hot" id="pfJL">⬇️ Left leg file (${PF.split}×${PF.H} PNG)</button>`:`<button class="hot" id="pfLegDl">⬇️ Legs print file (${PF.W}×${PF.H} PNG)</button>`}${PF.inferredSide?'<p class="hint warn">Inferred side line: this template has no side seam drawn, so the stripe and the front/back split follow the pocket-placement mark. Printful mockups looked right, but the exact seam is not guaranteed.</p>':''}${yoga?' <button class="hot" id="pfWbF">⬇️ Front waistband (3000×1050)</button> <button class="hot" id="pfWbB">⬇️ Back waistband (2400×900)</button>':''} <button id="pfLegPv">Preview with guides (not for print)</button> <button id="pfLegLbl">Inside label 2.5×1 in (375×150)</button>
  <ol class="hint pfSteps"><li>Open <a href="${PF.url}" target="_blank" rel="noopener">${esc(PF.title)} in Printful</a>. Upload the legs file on its ${yoga?'legs':'PRINT FILE'} tab${yoga?', and each waistband file on its own tab':''}. Each file should fill its whole area: don't scale it down.</li><li>Inside label tab → upload the 375×150 label (optional).</li><li>Turn on 3D view to check it. Nothing is sent to Printful automatically.</li></ol>
  <p class="hint">Official template (for checking): <a href="${PF.tpl}" target="_blank" rel="noopener">${esc(PF.tpl.split('/').pop())}</a>. Large file: building it uses about 180 MB of memory, so phones may fail; use a computer.</p>`;
- host.querySelector('#pfLegProd').onchange=e=>{host.dataset.leg=e.target.value;legSection(host,d,nm);};
+ host.querySelector('#pfLegProd').onchange=e=>{host.dataset.leg=legChoice=e.target.value;legSection(host,d,nm);};
  let pf=null;const build=()=>pf||(pf=legPrintFile(d,{},PF)),tag={yoga:'yoga-leggings',aop:'aop-leggings',shorts:'aop-shorts',jogm:'mens-joggers',jogw:'womens-joggers'}[PF.key];
  setTimeout(()=>{try{const o=build(),pv=legPreview(o.canvas,PF);host.querySelector('#pfLegPrev').getContext('2d').drawImage(pv,0,0);host.querySelector('#pfLegNotes').innerHTML=o.notes.map(esc).join('<br>')+(o.incomplete?'<br><b class="warn">Some art is not placed: see above.</b>':'');}catch(e){host.querySelector('#pfLegNotes').textContent='Could not build: '+e.message;}},30);
  if(PF.split)for(const [id,p] of [['#pfJR','right'],['#pfJL','left']])host.querySelector(id).onclick=async e=>{e.target.disabled=true;try{const o=build();await savePng(o.files[p],`jimmi-${nm}-printful-${tag}-${p}-leg-${o.incomplete?'INCOMPLETE-':''}${PF.split}x${PF.H}-150dpi.png`,150);}catch(err){alert('Export failed: '+err.message);}e.target.disabled=false;};
@@ -256,7 +256,51 @@ function sleeveStripeUI(){const tp=document.querySelector('#teePanel');if(!tp||d
   const o={color:b.querySelector('#pfSlvC').value,lines:+b.querySelector('#pfSlvN').value,thick:+b.querySelector('#pfSlvT').value};const n=sleeveStripes(d,o);if(!n){alert('This garment has no sleeve zones.');return;}J.commit();};}
 
 const st=document.createElement('style');st.textContent=`#pfModal .box{max-height:calc(100dvh - 24px);overflow:auto;display:flex;flex-direction:column}#pfModal #pfClose{position:sticky;bottom:0;align-self:center;z-index:2;flex:none}#pfModal .pfList{max-height:none;overflow:visible}.warn{color:#ffb347}.pfList{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}.pfRow{display:flex;gap:10px;align-items:center;border:1px solid var(--neon,#f0f);border-radius:10px;padding:8px}.pfPrev{width:140px;height:100px;object-fit:contain;flex:none;border-radius:8px;background:repeating-conic-gradient(#2a2340 0 25%,#1a1530 0 50%) 0 0/16px 16px}.pfInfo{flex:1;min-width:0}.pfCtl{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0}.pfCtl input[type=number]{width:70px}.pfQ.warn{color:#ffb347}.pfDl,.pfRow .chip{min-height:44px}`;document.head.appendChild(st);
-W.JIMMI_PRINTFUL={open,AOPTEE,AOPHOOD,aopTeeFile,SHORTS,JOGM,JOGW,sleeveStripes,LEG,YOGA,LEG_PROFILES,bandFile,xsAt,legPrintFile,legPreview,garmentZone,PRODUCTS,zoneArt,zoneWarnings,srcPx,slug,catalog,render,pngFile,withDpi,crc,quality,PF_URL};
-document.addEventListener('DOMContentLoaded',()=>{try{sleeveStripeUI();}catch(e){}const sb=$('.stagebar');if(sb&&!$('#pfBtn')){const b=document.createElement('button');b.id='pfBtn';b.textContent='🖨️ Use in Printful';b.title='Download artwork-only transparent PNGs for Printful';b.onclick=open;sb.appendChild(b);}
+/* ---- Private Printful bridge client (standard AOP leggings ONLY). Enabled in v34 for automatic transfer; other garments stay manual.
+   Contract = /workspace/jimmi-printful-bridge src/protocol.mjs + client-adapter.mjs: popup opened synchronously on click BEFORE async PNG export;
+   design posted once both jimmi:ready and the PNG exist. Server sends R2 bytes as base64 to Printful (workers.dev URLs rejected).
+   No secrets here: owner login lives only in the bridge origin's HttpOnly cookie. Nothing is stored in localStorage or URLs except the one-time nonce. */
+const BRIDGE={enabled:true,origin:'https://jimmi-printful-bridge.jimmys-gym-shop.workers.dev',profile:'standard-aop-leggings-7200x6225-v1',renderHosts:['files.cdn.printful.com','printful-upload.s3-accelerate.amazonaws.com'],timeoutMs:25*60*1000};
+const bridgeOn=()=>!!(BRIDGE.enabled&&/^https:\/\/[a-z0-9.-]+$/.test(BRIDGE.origin)&&new URL(BRIDGE.origin).origin===BRIDGE.origin);
+let legChoice='aop',bridgeBusy=null;const bridgeDone={};
+const isStdLeg=d=>!!(d&&d.editor==='tee'&&(d.garment||'leggings')==='leggings'&&legChoice==='aop');
+const okRender=u=>{try{const x=new URL(u);return x.protocol==='https:'&&BRIDGE.renderHosts.includes(x.hostname)&&!x.username&&!x.password&&!x.port;}catch(e){return false;}};
+const acceptMsg=(ev,o)=>ev.origin===o.origin&&!!o.source&&ev.source===o.source&&typeof o.nonce==='string'&&o.nonce.length>=32&&ev.data&&ev.data.nonce===o.nonce&&typeof ev.data.type==='string';
+async function sha256hex(blob){const h=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer());return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+/* MUST be called synchronously from the click handler. makeBlob() returns a Promise<Blob> (the 7200x6225 PNG). */
+function bridgeSend(makeBlob,ui){ui=ui||{};const say=ui.status||(()=>{});
+ if(!bridgeOn())return Promise.reject(new Error('Private Printful connection is not set up. Use the manual files.'));
+ if(bridgeBusy){say('A transfer is already running. Finish it in its popup first.');return bridgeBusy;}
+ const origin=BRIDGE.origin,nonce=crypto.randomUUID(),popup=W.open(`${origin}/?nonce=${encodeURIComponent(nonce)}`,'_blank','popup,width=760,height=820');
+ if(!popup)return Promise.reject(new Error('The browser blocked the private Printful popup. Allow popups for this site, or use the manual files.'));
+ bridgeBusy=new Promise((resolve,reject)=>{let ready=false,design=null,sent=false,fin=false;
+  const end=(f,v)=>{if(fin)return;fin=true;W.removeEventListener('message',rx);clearTimeout(t);clearInterval(cl);bridgeBusy=null;f(v);};
+  const go=()=>{if(ready&&design&&!sent){sent=true;popup.postMessage({type:'jimmi:design',nonce,design},origin);say('Sending the print file privately…');}};
+  const rx=ev=>{if(!acceptMsg(ev,{origin,source:popup,nonce}))return;const m=ev.data;
+   if(m.type==='jimmi:ready'){ready=true;go();}
+   else if(m.type==='jimmi:status')say('Printful: '+((m.job&&(m.job.state||m.job.status))||'working')+'…');
+   else if(m.type==='jimmi:complete'){const r=m.job&&m.job.renders;if(!Array.isArray(r)||!r.length||!r.every(okRender))return end(reject,new Error('Printful finished but returned no usable mockup. Check the popup; do not resend blindly.'));if(design)bridgeDone[design.idempotencyKey]=m.job;end(resolve,m.job);}
+   else if(m.type==='jimmi:error')end(reject,new Error(m.error||'Private transfer failed'));};
+  W.addEventListener('message',rx);
+  const t=setTimeout(()=>end(reject,new Error('Private transfer timed out. Check its popup before starting another.')),BRIDGE.timeoutMs);
+  const cl=setInterval(()=>{if(popup.closed)end(reject,new Error('The connection popup was closed. The transfer may still exist in Printful; do not blindly repeat it.'));},1000);
+  say('Building the 7200×6225 print file…');
+  Promise.resolve().then(makeBlob).then(async blob=>{if(!(blob instanceof Blob)||blob.type!=='image/png'||!blob.size||blob.size>32*1024*1024)throw new Error('A PNG export under 32 MiB is required');
+   const id=await sha256hex(blob);if(bridgeDone[id]){try{popup.close();}catch(e){}return end(resolve,bridgeDone[id]);}
+   design={blob,profile:BRIDGE.profile,placement:'default',idempotencyKey:id};go();if(!ready)say('Sign in to the private Printful connection in its popup…');})
+  .catch(e=>{try{popup.close();}catch(_){}end(reject,e);});});
+ return bridgeBusy;}
+function bridgeResult(job,d){const m=$('#pfModal')||(open(),$('#pfModal'));const host=m&&m.querySelector('#pfDesign');if(!host)return;const box=document.createElement('div');box.className='pfBridgeOut';
+ box.innerHTML='<h5>Printful mockup (private connection)</h5><p class="hint">Made by Printful from your standard leggings print file. Nothing was saved to a store, product or order.</p>';
+ for(const u of (job.renders||[]).filter(okRender)){const i=document.createElement('img');i.src=u;i.alt='Printful mockup';i.referrerPolicy='no-referrer';i.style.maxWidth='100%';box.appendChild(i);}host.prepend(box);}
+function useInPrintful(){const J=W.__jimmi,d=J&&J.get&&J.get();if(!bridgeOn()||!isStdLeg(d))return open();
+ const btn=$('#pfBtn');if(btn)btn.disabled=true;const st=$('#pfBStat');const say=t=>{if(st)st.textContent=t;};
+ bridgeSend(async()=>{const o=legPrintFile(d,{},LEG);if(o.incomplete)throw new Error('Some art is not placed on this design: '+o.notes.join(' '));return new Blob([withDpi(new Uint8Array(await (await blobOf(o.canvas)).arrayBuffer()),150)],{type:'image/png'});},{status:say})
+ .then(job=>{say('Done: Printful mockup shown below.');bridgeResult(job,d);})
+ .catch(e=>{say('Not sent: '+e.message);if(confirm(e.message+'\n\nOpen the manual Printful files instead?'))open();})
+ .finally(()=>{if(btn)btn.disabled=false;});}
+W.JIMMI_PRINTFUL={open,BRIDGE,bridgeSend,bridgeOn,useInPrintful,okRender,acceptMsg,isStdLeg,setLegChoice:v=>legChoice=v,AOPTEE,AOPHOOD,aopTeeFile,SHORTS,JOGM,JOGW,sleeveStripes,LEG,YOGA,LEG_PROFILES,bandFile,xsAt,legPrintFile,legPreview,garmentZone,PRODUCTS,zoneArt,zoneWarnings,srcPx,slug,catalog,render,pngFile,withDpi,crc,quality,PF_URL};
+
+document.addEventListener('DOMContentLoaded',()=>{try{sleeveStripeUI();}catch(e){}const sb=$('.stagebar');if(sb&&!$('#pfBtn')){const b=document.createElement('button');b.id='pfBtn';b.textContent='🖨️ Use in Printful';b.title='Download artwork-only transparent PNGs for Printful';b.onclick=useInPrintful;sb.appendChild(b);if(bridgeOn()){const m=document.createElement('button');m.id='pfManual';m.textContent='Manual Printful files';m.title='Download the print files and upload them yourself';m.onclick=open;sb.appendChild(m);const st=document.createElement('span');st.id='pfBStat';st.className='hint';sb.appendChild(st);}}
  const lb=$('#lib .box');if(lb&&!$('#pfBtn2')){const b=document.createElement('button');b.id='pfBtn2';b.className='hot';b.textContent='🖨️ Download these for Printful (transparent PNGs)';b.onclick=()=>{$('#lib').hidden=true;open();};lb.insertBefore(b,$('#libGrid'));}});
 })();
