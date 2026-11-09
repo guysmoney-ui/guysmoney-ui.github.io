@@ -256,11 +256,11 @@ function sleeveStripeUI(){const tp=document.querySelector('#teePanel');if(!tp||d
   const o={color:b.querySelector('#pfSlvC').value,lines:+b.querySelector('#pfSlvN').value,thick:+b.querySelector('#pfSlvT').value};const n=sleeveStripes(d,o);if(!n){alert('This garment has no sleeve zones.');return;}J.commit();};}
 
 const st=document.createElement('style');st.textContent=`#pfModal .box{max-height:calc(100dvh - 24px);overflow:auto;display:flex;flex-direction:column}#pfModal #pfClose{position:sticky;bottom:0;align-self:center;z-index:2;flex:none}#pfModal .pfList{max-height:none;overflow:visible}.warn{color:#ffb347}.pfList{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}.pfRow{display:flex;gap:10px;align-items:center;border:1px solid var(--neon,#f0f);border-radius:10px;padding:8px}.pfPrev{width:140px;height:100px;object-fit:contain;flex:none;border-radius:8px;background:repeating-conic-gradient(#2a2340 0 25%,#1a1530 0 50%) 0 0/16px 16px}.pfInfo{flex:1;min-width:0}.pfCtl{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0}.pfCtl input[type=number]{width:70px}.pfQ.warn{color:#ffb347}.pfDl,.pfRow .chip{min-height:44px}`;document.head.appendChild(st);
-/* ---- Private Printful bridge client (standard AOP leggings ONLY). Dormant until BRIDGE.enabled + exact origin are set in a reviewed release.
-   Contract = /workspace/jimmi-printful-bridge src/protocol.mjs + client-adapter.mjs, with one change: the popup is opened synchronously in the click
-   BEFORE the async PNG export, and the design is posted once both the popup said jimmi:ready and the PNG is built.
+/* ---- Private Printful bridge client (standard AOP leggings ONLY). Enabled in v34 for automatic transfer; other garments stay manual.
+   Contract = /workspace/jimmi-printful-bridge src/protocol.mjs + client-adapter.mjs: popup opened synchronously on click BEFORE async PNG export;
+   design posted once both jimmi:ready and the PNG exist. Server sends R2 bytes as base64 to Printful (workers.dev URLs rejected).
    No secrets here: owner login lives only in the bridge origin's HttpOnly cookie. Nothing is stored in localStorage or URLs except the one-time nonce. */
-const BRIDGE={enabled:false,origin:'https://jimmi-printful-bridge.jimmys-gym-shop.workers.dev',profile:'standard-aop-leggings-7200x6225-v1',renderHosts:['files.cdn.printful.com','printful-upload.s3-accelerate.amazonaws.com'],timeoutMs:25*60*1000};
+const BRIDGE={enabled:true,origin:'https://jimmi-printful-bridge.jimmys-gym-shop.workers.dev',profile:'standard-aop-leggings-7200x6225-v1',renderHosts:['files.cdn.printful.com','printful-upload.s3-accelerate.amazonaws.com'],timeoutMs:25*60*1000};
 const bridgeOn=()=>!!(BRIDGE.enabled&&/^https:\/\/[a-z0-9.-]+$/.test(BRIDGE.origin)&&new URL(BRIDGE.origin).origin===BRIDGE.origin);
 let legChoice='aop',bridgeBusy=null;const bridgeDone={};
 const isStdLeg=d=>!!(d&&d.editor==='tee'&&(d.garment||'leggings')==='leggings'&&legChoice==='aop');
@@ -278,7 +278,7 @@ function bridgeSend(makeBlob,ui){ui=ui||{};const say=ui.status||(()=>{});
   const go=()=>{if(ready&&design&&!sent){sent=true;popup.postMessage({type:'jimmi:design',nonce,design},origin);say('Sending the print file privately…');}};
   const rx=ev=>{if(!acceptMsg(ev,{origin,source:popup,nonce}))return;const m=ev.data;
    if(m.type==='jimmi:ready'){ready=true;go();}
-   else if(m.type==='jimmi:status')say('Printful: '+((m.job&&m.job.status)||'working')+'…');
+   else if(m.type==='jimmi:status')say('Printful: '+((m.job&&(m.job.state||m.job.status))||'working')+'…');
    else if(m.type==='jimmi:complete'){const r=m.job&&m.job.renders;if(!Array.isArray(r)||!r.length||!r.every(okRender))return end(reject,new Error('Printful finished but returned no usable mockup. Check the popup; do not resend blindly.'));if(design)bridgeDone[design.idempotencyKey]=m.job;end(resolve,m.job);}
    else if(m.type==='jimmi:error')end(reject,new Error(m.error||'Private transfer failed'));};
   W.addEventListener('message',rx);

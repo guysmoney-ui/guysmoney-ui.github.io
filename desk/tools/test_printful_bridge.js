@@ -5,10 +5,12 @@ const log=[],L={};let popup;const W={JimmiRender:{C:{}},addEventListener:(t,f)=>
 const doc={querySelector:()=>null,createElement:()=>({}),head:{appendChild(){}},addEventListener(){},body:{}};
 new Function('window','document',fs.readFileSync(path.join(D,'printful.js'),'utf8'))(W,doc);const P=W.JIMMI_PRINTFUL,src=fs.readFileSync(path.join(D,'printful.js'),'utf8');
 (async()=>{
- // dormant by default: not enabled, empty origin, no secrets
- assert.strictEqual(P.BRIDGE.enabled,false);assert.strictEqual(P.BRIDGE.origin,'https://jimmi-printful-bridge.jimmys-gym-shop.workers.dev');assert.ok(!P.bridgeOn(),'disabled until release gate');
+ // v34: enabled for standard AOP leggings only; exact workers.dev origin; no secrets in shop source
+ assert.strictEqual(P.BRIDGE.enabled,true);assert.strictEqual(P.BRIDGE.origin,'https://jimmi-printful-bridge.jimmys-gym-shop.workers.dev');assert.ok(P.bridgeOn(),'live bridge gate on');
  assert.ok(!/OWNER_KEY|SESSION_SECRET|PRINTFUL_TOKEN|Bearer |localStorage\.setItem\([^)]*(token|secret)/i.test(src),'no secrets');
- await assert.rejects(P.bridgeSend(()=>null),/not set up/);assert.strictEqual(log.length,0,'no popup when dormant');
+ // disabled / bad origin still blocks
+ P.BRIDGE.enabled=false;assert.ok(!P.bridgeOn());await assert.rejects(P.bridgeSend(()=>null),/not set up/);assert.strictEqual(log.length,0,'no popup when disabled');
+ P.BRIDGE.enabled=true;assert.ok(P.bridgeOn());
  // guard: only standard AOP leggings
  const leg={editor:'tee',garment:'leggings'};assert.ok(P.isStdLeg(leg));P.setLegChoice('yoga');assert.ok(!P.isStdLeg(leg));P.setLegChoice('aop');
  for(const g of ['shorts','joggers','tee','hoodie'])assert.ok(!P.isStdLeg({editor:'tee',garment:g}),g+' stays manual');
