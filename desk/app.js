@@ -129,7 +129,7 @@ function paintTee(){document.body.classList.toggle('bottle',D.garment==='bottle'
  if(s){$('#sSize').value=s.scale;$('#sAng').value=s.rotation||0;$('#sAngV').textContent=Math.round(s.rotation||0)+'°';}
  swatches('#sBody',R.INKS,s?s.colors.body:'');swatches('#sHair',R.INKS,s?s.colors.hair:'');
  if(document.activeElement!==$('#nm2'))$('#nm2').value=D.name;$('#creditTag').checked=!!D.creditTag;$('#libZone').textContent=R.ZONES[zone].n.toLowerCase();}
-on('#zones',v=>{zone=v;sid=null;const Z=R.ZONES[v];if(Z.view&&Z.view!==D.view)D.view=Z.view;});
+on('#zones',v=>{zone=v;sid=null;const Z=R.ZONES[v];if(Z.view&&Z.view!==D.view)D.view=Z.view;if(Z&&Z.band)toast('Center waistband stickers sit on a seam and can be partly hidden.');});
 const setC=(k,v)=>{const s=cur();if(!s){toast('Tap a sticker first');return;}s.colors[k]=v;if(k==='body'&&s.el==='word')s.colors.hair=v;};
 on('#sBody',v=>setC('body',v));on('#sHair',v=>setC('hair',v));
 ['#sBody','#sHair'].forEach(id=>$(id).addEventListener('change',e=>{if(e.target.type!=='color')return;setC(id==='#sBody'?'body':'hair',e.target.value);commit();ui();}));
