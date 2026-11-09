@@ -19,28 +19,43 @@ console.log('printful tests OK');
  assert.strictEqual(P.slug('My Teal & Brick Hoodie!'),'my-teal-brick-hoodie');
  const src=fs.readFileSync(path.join(D,'printful.js'),'utf8');assert.ok(!/api\.printful\.com\/(mockup|store|orders|files)/.test(src.replace(/GET https:\/\/api\.printful\.com\/products/,'')),'no Printful API calls');
  assert.ok(!/(token|apikey|api_key|Bearer)\s*[:=]\s*['"][A-Za-z0-9_]{8,}/i.test(src),'no secrets');
- assert.ok(/#pfModal #pfClose\{position:sticky/.test(src),'close button sticky');assert.ok(sw.includes("jimmi-desk-v35"));
+ assert.ok(/#pfModal #pfClose\{position:sticky/.test(src),'close button sticky');assert.ok(sw.includes("jimmi-desk-v36"));
  console.log('placement export tests OK');}
 
- {const L=P.LEG,B=P.WB_BLEED;assert.ok(B>=48&&B<=96,'waistband bleed across join');
-  assert.strictEqual(typeof P.bandBBox,'function');assert.strictEqual(typeof P.foldY,'function');
-  /* Exterior band halves sit JUST BELOW the fold (Printful mockup-confirmed Nov 2026) */
-  const fr=P.bandBBox(160,300+B,'right',1,L),fl=P.bandBBox(300-B,440,'left',-1,L);
-  const br=P.bandBBox(300-B,440,'right',-1,L),bl=P.bandBBox(160,300+B,'left',1,L);
+ {const L=P.LEG,B=P.SEAM_BLEED;assert.ok(B>=4&&B<=16,'tiny continuous seam bleed only (not full-sticker dup)');
+  assert.strictEqual(typeof P.bandBBox,'function');assert.strictEqual(typeof P.foldY,'function');assert.strictEqual(typeof P.seamDist,'function');
+  /* Exact half-split at mid=300 (no overlapping full sticker ranges) */
+  const mid=300,a0=160,b1=440;
+  assert.ok(a0<mid&&mid<b1);
+  /* Exterior band halves sit JUST BELOW the fold; cut edge anchored at seam */
+  const fr=P.bandBBox(a0,mid,'right',1,L),fl=P.bandBBox(mid,b1,'left',-1,L);
+  const br=P.bandBBox(mid,b1,'right',-1,L),bl=P.bandBBox(a0,mid,'left',1,L);
   for(const [name,bb] of [['F-R',fr],['F-L',fl],['B-R',br],['B-L',bl]]){
-   assert.ok(((bb.minY+bb.maxY)/2)>bb.fy-1,name+' centroid should sit below fold (exterior)');
    assert.ok(bb.minY>=0&&bb.maxY<L.H&&bb.minX>=0&&bb.maxX<=L.W,name+' bbox in printfile');
    assert.ok(bb.maxY-bb.minY>40&&bb.maxX-bb.minX>40,name+' has area');
-   assert.ok(bb.maxY>bb.fy,name+' extends below fold');
+   /* Fold-local: dy=12 means every corner is below the fold line (fold slopes, so printfile-Y vs fy@cx is not the check) */
+   const panel=name[2]==='R'?'right':'left', dir=name[0]==='F'?(name[2]==='R'?1:-1):(name[2]==='R'?-1:1);
+   const ang=P.foldA(L.fold[panel]),cxi=L.cx[panel],fy=P.foldY(L.fold[panel],cxi);
+   const localYs=bb.corners.map(([x,y])=>{const dx=x-cxi,dy=y-fy;return -dx*Math.sin(ang)+dy*Math.cos(ang);});
+   assert.ok(Math.min(...localYs)>=10,name+' fold-local y >= dy(~12) — exterior below fold');
+   assert.ok(typeof bb.cutLocal==='number'&&typeof bb.halfSpan==='number',name+' cut metadata');
   }
-  /* Center bleed: overlapping editor ranges cover mid join on both halves */
-  assert.strictEqual((300+B)-(300-B),2*B);
-  assert.ok(160<=300&&300<=300+B,'front center in right half with bleed');
-  assert.ok(300-B<=300&&300<=440,'front center in left half with bleed');
-  /* Upright: editor-top of source maps to dest top (dy), toward smaller local-y magnitude below fold = closer to fold = top of exterior band when worn */
-  const a=160,b=300+B,w=(b-a)*7.5,h=50*7.5,k=Math.min(1,L.bandH/h),dw=w*k,dh=h*k,dy=12;
+  /* Mid cut shifted toward seam: at ±target (=seamDist-SEAM_INSET), not at absolute cut edge */
+  assert.ok(P.SEAM_INSET>=80&&P.SEAM_INSET<=400,'visible inset from cut edge');
+  assert.ok(Math.abs(fr.cutLocal-fr.target)<1e-6&&fr.target>fr.halfSpan,'front-right cut shifted toward front seam');
+  assert.ok(Math.abs(fl.cutLocal+fl.target)<1e-6&&fl.target>fl.halfSpan,'front-left cut shifted toward front seam');
+  assert.ok(Math.abs(br.cutLocal+br.target)<1e-6&&Math.abs(br.target-br.halfSpan)<1,'back-right stays near side-anchored (inset 400)');
+  assert.ok(Math.abs(bl.cutLocal-bl.target)<1e-6&&Math.abs(bl.target-bl.halfSpan)<1,'back-left stays near side-anchored (inset 400)');
+  /* No duplicated center art: exact halves share only the mid cut (+ tiny SEAM_BLEED) */
+  assert.strictEqual(mid-a0,b1-mid,'symmetric halves');
+  assert.ok(B*2<40,'bleed must stay far smaller than a typical center sticker (~80 editor units)');
+  /* Back text centering: equal target distances on both back halves */
+  assert.ok(Math.abs(br.target-bl.target)<40,'back halves similar seam targets');
+  assert.ok(Math.abs(fr.halfSpan-(mid-a0)*fr.ppu)<1e-6,'halfSpan matches editor half * ppu');
+  /* Upright below fold */
+  const dy=12,dh=50*7.5*Math.min(1,L.bandH/(50*7.5));
   assert.ok(dy===12,'band dest starts just below fold');
-  assert.ok(dy<dy+dh,'editor-top (src y=0) is drawn at dy (toward fold) and editor-bottom at dy+dh (down the leg) — upright for exterior');
+  assert.ok(dy<dy+dh,'editor-top at dy (toward fold), bottom at dy+dh — upright for exterior');
   console.log('waistband fold/bleed tests OK');}
 
 {const Y=P.YOGA;assert.deepStrictEqual([Y.W,Y.H,Y.bands.front.W,Y.bands.front.H,Y.bands.back.W,Y.bands.back.H],[7050,6150,3000,1050,2400,900]);assert.strictEqual(P.LEG_PROFILES.length,5);

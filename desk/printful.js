@@ -148,16 +148,27 @@ function warpHalf(ctx,src,Z,S,edges,a,b,panel,dir,PF){PF=PF||LEG;const [rx,ry,,r
   ctx.drawImage(src,(e[0]-Z.rect[0])*S,sy,(e[1]-e[0])*S,sh,tx0,Y,tx1-tx0,step+0.5);}}
 /* Standard AOP leggings waistband: Printful's mockup maps the EXTERIOR waistband from the strip
    JUST BELOW the blue folding line (confirmed Nov 9 2026 via real mockups). Art above the fold
-   is folded under and does not show. Place upright below the fold. WB_BLEED overlaps the side
-   join so front-center / back-center art is duplicated into both panel edges. */
-const WB_BLEED=64; /* editor units; enough overlap that a ~2" center sticker is largely in both halves */
-function bandPiece(ctx,src,S,Z,a,b,panel,dir,PF){PF=PF||LEG;const L=PF.fold[panel],cx=PF.cx[panel],[rx,,,rh]=Z.rect,w=(b-a)*7.5,h=rh*7.5,k=Math.min(1,PF.bandH/h),dw=w*k,dh=h*k,dx=dir>0?0:-dw,dy=12;
+   is folded under and does not show. Place upright below the fold.
+   Center art is ONE continuous image split at editor mid=300 — left half on one panel edge,
+   right half on the matching edge — so the halves rejoin after sewing. SEAM_BLEED only continues
+   those same pixels a few units past the seam (never duplicates the whole sticker). */
+const SEAM_BLEED=8; /* editor units of continuous overflow past the mid cut; keep << sticker size */
+const WB_BLEED=SEAM_BLEED; /* back-compat alias for tests/exports */
+const SEAM_INSET=180; /* front: px inside fold endpoint (mockup clips absolute cut). Back uses 400 so cut stays near side-anchored, mockup-confirmed. */
+function seamDist(panel,dir,PF){PF=PF||LEG;const L=PF.fold[panel],cx=PF.cx[panel],t=dir>0?L[1]:L[0],fy=foldY(L,cx);return Math.hypot(t[0]-cx,t[1]-fy);}
+/* a..b is one editor half ending at mid. Keep aspect (ppu=7.5*k), side-relative layout, but SHIFT
+   toward the seam so the mid cut sits near the visible seam (seamDist-SEAM_INSET). Tiny SEAM_BLEED
+   continues the SAME pixels past mid — never duplicates the whole sticker. */
+function bandPiece(ctx,src,S,Z,a,b,panel,dir,PF,bleed){PF=PF||LEG;bleed=bleed==null?SEAM_BLEED:bleed;const L=PF.fold[panel],cx=PF.cx[panel],[rx,,,rh]=Z.rect,h=rh*7.5,k=Math.min(1,PF.bandH/h),ppu=7.5*k,half=(b-a)*ppu,isFront=(panel==='right')===(dir>0),inset=isFront?SEAM_INSET:400,target=Math.max(half,seamDist(panel,dir,PF)-inset),shift=dir>0?(target-half):-(target-half),aSrc=dir>0?a:Math.max(a-bleed,rx),bSrc=dir>0?b+bleed:b,x0=(dir>0?0:-(bSrc-aSrc)*ppu)+shift,dw=(bSrc-aSrc)*ppu,dh=h*k,dy=12;
  ctx.save();ctx.translate(cx,foldY(L,cx));ctx.rotate(foldA(L));
- ctx.drawImage(src,(a-rx)*S,0,(b-a)*S,rh*S,dx,dy,dw,dh);ctx.restore();}
+ ctx.drawImage(src,(aSrc-rx)*S,0,(bSrc-aSrc)*S,rh*S,x0,dy,dw,dh);ctx.restore();}
 /** Printfile-space bbox for a band half (same transform as bandPiece; for tests). */
-function bandBBox(a,b,panel,dir,PF){PF=PF||LEG;const L=PF.fold[panel],cxi=PF.cx[panel],fy=foldY(L,cxi),ang=foldA(L),w=(b-a)*7.5,h=50*7.5,k=Math.min(1,PF.bandH/h),dw=w*k,dh=h*k,dx=dir>0?0:-dw,dy=12,out=[];
- for(const [lx,ly] of [[dx,dy],[dx+dw,dy],[dx+dw,dy+dh],[dx,dy+dh]]){const xr=lx*Math.cos(ang)-ly*Math.sin(ang),yr=lx*Math.sin(ang)+ly*Math.cos(ang);out.push([cxi+xr,fy+yr]);}
- const xs=out.map(p=>p[0]),ys=out.map(p=>p[1]);return {corners:out,minX:Math.min(...xs),maxX:Math.max(...xs),minY:Math.min(...ys),maxY:Math.max(...ys),fy,belowFold:Math.min(...ys)>=fy-2};}
+function bandBBox(a,b,panel,dir,PF,bleed){PF=PF||LEG;bleed=bleed==null?SEAM_BLEED:bleed;const L=PF.fold[panel],cxi=PF.cx[panel],fy=foldY(L,cxi),ang=foldA(L),h=50*7.5,k=Math.min(1,PF.bandH/h),ppu=7.5*k,half=(b-a)*ppu,isFront=(panel==='right')===(dir>0),inset=isFront?SEAM_INSET:400,target=Math.max(half,seamDist(panel,dir,PF)-inset),shift=dir>0?(target-half):-(target-half),aSrc=dir>0?a:a-bleed,bSrc=dir>0?b+bleed:b,x0=(dir>0?0:-(bSrc-aSrc)*ppu)+shift,dw=(bSrc-aSrc)*ppu,dh=h*k,dy=12,out=[];
+ for(const [lx,ly] of [[x0,dy],[x0+dw,dy],[x0+dw,dy+dh],[x0,dy+dh]]){const xr=lx*Math.cos(ang)-ly*Math.sin(ang),yr=lx*Math.sin(ang)+ly*Math.cos(ang);out.push([cxi+xr,fy+yr]);}
+ const xs=out.map(p=>p[0]),ys=out.map(p=>p[1]);
+ const cutLocal=dir>0?target:-target;
+ const mx=cxi+cutLocal*Math.cos(ang)-dy*Math.sin(ang),my=fy+cutLocal*Math.sin(ang)+dy*Math.cos(ang);
+ return {corners:out,minX:Math.min(...xs),maxX:Math.max(...xs),minY:Math.min(...ys),maxY:Math.max(...ys),fy,belowFold:Math.min(...ys)>=fy-2,cutX:mx,cutY:my,cutLocal,ppu,k,halfSpan:half,target,shift};}
 function legPrintFile(d,o,PF){o=o||{};PF=PF||LEG;const yoga=PF.key==='yoga';const r=R(),c=document.createElement('canvas');c.width=PF.W;c.height=PF.H;const x=c.getContext('2d'),notes=[],S=8,base=d.colors&&d.colors.base;
  if(o.base!==false&&base){x.fillStyle=base;x.fillRect(0,0,PF.W,PF.H);notes.push('Base color '+base+' fills the whole print file (full bleed, per template).');}
  if(d.colors&&d.colors.stripe){const w=(+d.colors.stripeWidth||7)*7,n=Math.max(1,Math.min(3,+d.colors.stripeCount||1)),gap=w*2,T=n*w+(n-1)*gap;x.fillStyle=d.colors.stripe;
@@ -171,10 +182,10 @@ function legPrintFile(d,o,PF){o=o||{};PF=PF||LEG;const yoga=PF.key==='yoga';cons
   const half=(e,a,b,panel,dir)=>warpHalf(x,g,Z,S,e,a,b,panel,dir,PF);
   /* back view: viewer-left half = wearer's left leg */ half(E,150,300,'left',1);half(E2,300,450,'right',-1);notes.push('Back/seat art warped onto the BACK half of each leg panel.');}
  const bands={};if(yoga){for(const [z,k] of [[ZN.wb,'front'],[ZN.wbb,'back']])bands[k]=bandFile(d,z,PF.bands[k],o.base!==false?base:null);if(has(ZN.wb)||has(ZN.wbb))notes.push('Waistband art goes in its own files (front 3000×1050, back 2400×900), fitted inside each safe area. Straight art isn\'t bent to the curved band. The back waistband was checked in Printful\'s 2D view only.');if(d.colors&&d.colors.stripe)notes.push('The side stripe isn\'t added to the separate waistband files (where the band\'s side falls isn\'t marked on its template).');}
- else{ const mid=300,bl=WB_BLEED; /* overlap across the side join so center stickers/text aren't lost in the seam */
- if(has(ZN.wb)){const g=garmentZone(d,ZN.wb,S),Z=Zs[ZN.wb];bandPiece(x,g,S,Z,160,mid+bl,'right',1,PF);bandPiece(x,g,S,Z,mid-bl,440,'left',-1,PF);}
- if(has(ZN.wbb)){const g=garmentZone(d,ZN.wbb,S),Z=Zs[ZN.wbb];bandPiece(x,g,S,Z,160,mid+bl,'left',1,PF);bandPiece(x,g,S,Z,mid-bl,440,'right',-1,PF);}
- if(has(ZN.wb)||has(ZN.wbb))notes.push("Waistband art sits just below each fold line (Printful exterior band) and bleeds across the side join so center stickers are not lost. Seam alignment is still approximate.");
+ else{ const mid=300; /* exact split at garment center — halves rejoin at the seam after sewing */
+ if(has(ZN.wb)){const g=garmentZone(d,ZN.wb,S),Z=Zs[ZN.wb];bandPiece(x,g,S,Z,160,mid,'right',1,PF);bandPiece(x,g,S,Z,mid,440,'left',-1,PF);}
+ if(has(ZN.wbb)){const g=garmentZone(d,ZN.wbb,S),Z=Zs[ZN.wbb];bandPiece(x,g,S,Z,160,mid,'left',1,PF);bandPiece(x,g,S,Z,mid,440,'right',-1,PF);}
+ if(has(ZN.wb)||has(ZN.wbb))notes.push("Waistband art sits just below each fold line (Printful exterior band), split at center so front/back stickers rejoin at the seam. Seam alignment is still approximate.");
  }
  const unk=Object.keys(d.zones||{}).filter(z=>has(z)&&!Object.values(ZN).includes(z));if(unk.length)notes.push('NOT PLACED (place manually): '+unk.join(', '));
  let files=null;if(PF.split){files={};for(const [p,x0] of [['right',0],['left',PF.split]]){const f=document.createElement('canvas');f.width=PF.split;f.height=PF.H;f.getContext('2d').drawImage(c,x0,0,PF.split,PF.H,0,0,PF.split,PF.H);files[p]=f;}notes.push('Cuffs (separate piece at the bottom of each leg file) get the base color only: art and stripes are not placed on them.');}
@@ -223,7 +234,7 @@ function legSection(host,d,nm){const PROFS=LEG_PROFILES.filter(q=>q.garment===(d
  <label class="hint">Printful product <select id="pfLegProd">${PROFS.map(q=>`<option value="${q.key}"${q===PF?' selected':''}>${esc(q.title)}</option>`).join('')}</select></label>
  <p class="hint">Uses Printful's official template for <b>${esc(PF.title)}</b>: ${yoga?`<b>legs</b> 47×41 in (7050×6150 px), plus separate <b>front waistband</b> 20×7 in (3000×1050) and <b>back waistband</b> 16×6 in (2400×900)`:PF.split?`<b>two files, right leg and left leg</b>, each 33×50 in (${PF.split}×${PF.H} px)`:`one combined <b>${(PF.W/150).toFixed(PF.W%150?1:0)}×${(PF.H/150).toFixed(PF.H%150?1:0)} in</b> file (${PF.W}×${PF.H} px)`}, 150 dpi sRGB PNG. Your base color fills the whole file, the side stripe runs down each leg's outer side, and your art is fitted into each panel's safe area.</p>
  <p class="hint warn">Printful says exact placement and seam alignment can't be guaranteed. The front view is fitted onto the FRONT half of each panel${yoga?'':' and the waistband position is approximate'}. Check the 3D preview in Printful before saving or ordering.</p>
- ${yoga?'':`<p class="hint warn" id="pfWbSeamWarn">Center waistband stickers sit on a seam and can be partly hidden. Prefer repeating a motif or keeping important art away from the exact front/back center.</p>`}
+ ${yoga?'':`<p class="hint warn" id="pfWbSeamWarn">Center waistband stickers sit on a seam and can be partly hidden. Art is split across the two panels so halves rejoin after sewing; prefer keeping critical detail off the exact center line.</p>`}
  <div class="pfRow"><canvas id="pfLegPrev" class="pfPrev" style="width:220px;height:190px" width="900" height="${Math.round(PF.H*900/PF.W)}"></canvas><div class="pfInfo"><div id="pfLegNotes" class="hint">Building preview…</div></div></div>
  ${PF.split?`<button class="hot" id="pfJR">⬇️ Right leg file (${PF.split}×${PF.H} PNG)</button> <button class="hot" id="pfJL">⬇️ Left leg file (${PF.split}×${PF.H} PNG)</button>`:`<button class="hot" id="pfLegDl">⬇️ Legs print file (${PF.W}×${PF.H} PNG)</button>`}${PF.inferredSide?'<p class="hint warn">Inferred side line: this template has no side seam drawn, so the stripe and the front/back split follow the pocket-placement mark. Printful mockups looked right, but the exact seam is not guaranteed.</p>':''}${yoga?' <button class="hot" id="pfWbF">⬇️ Front waistband (3000×1050)</button> <button class="hot" id="pfWbB">⬇️ Back waistband (2400×900)</button>':''} <button id="pfLegPv">Preview with guides (not for print)</button> <button id="pfLegLbl">Inside label 2.5×1 in (375×150)</button>
  <ol class="hint pfSteps"><li>Open <a href="${PF.url}" target="_blank" rel="noopener">${esc(PF.title)} in Printful</a>. Upload the legs file on its ${yoga?'legs':'PRINT FILE'} tab${yoga?', and each waistband file on its own tab':''}. Each file should fill its whole area: don't scale it down.</li><li>Inside label tab → upload the 375×150 label (optional).</li><li>Turn on 3D view to check it. Nothing is sent to Printful automatically.</li></ol>
@@ -311,7 +322,7 @@ function useInPrintful(){const J=W.__jimmi,d=J&&J.get&&J.get();if(!bridgeOn()||!
  .then(job=>{say('Done: Printful mockup shown below.');bridgeResult(job,d);})
  .catch(e=>{say('Not sent: '+e.message);if(confirm(e.message+'\n\nOpen the manual Printful files instead?'))open();})
  .finally(()=>{if(btn)btn.disabled=false;});}
-W.JIMMI_PRINTFUL={open,BRIDGE,bridgeSend,bridgeOn,useInPrintful,okRender,acceptMsg,isStdLeg,setLegChoice:v=>legChoice=v,AOPTEE,AOPHOOD,aopTeeFile,SHORTS,JOGM,JOGW,sleeveStripes,LEG,YOGA,LEG_PROFILES,bandFile,bandPiece,bandBBox,WB_BLEED,foldY,foldA,xsAt,legPrintFile,legPreview,garmentZone,PRODUCTS,zoneArt,zoneWarnings,srcPx,slug,catalog,render,pngFile,withDpi,crc,quality,PF_URL};
+W.JIMMI_PRINTFUL={open,BRIDGE,bridgeSend,bridgeOn,useInPrintful,okRender,acceptMsg,isStdLeg,setLegChoice:v=>legChoice=v,AOPTEE,AOPHOOD,aopTeeFile,SHORTS,JOGM,JOGW,sleeveStripes,LEG,YOGA,LEG_PROFILES,bandFile,bandPiece,bandBBox,SEAM_BLEED,SEAM_INSET,WB_BLEED,seamDist,foldY,foldA,xsAt,legPrintFile,legPreview,garmentZone,PRODUCTS,zoneArt,zoneWarnings,srcPx,slug,catalog,render,pngFile,withDpi,crc,quality,PF_URL};
 
 document.addEventListener('DOMContentLoaded',()=>{try{sleeveStripeUI();}catch(e){}const sb=$('.stagebar');if(sb&&!$('#pfBtn')){const b=document.createElement('button');b.id='pfBtn';b.textContent='🖨️ Use in Printful';b.title='Download artwork-only transparent PNGs for Printful';b.onclick=useInPrintful;sb.appendChild(b);if(bridgeOn()){const m=document.createElement('button');m.id='pfManual';m.textContent='Manual Printful files';m.title='Download the print files and upload them yourself';m.onclick=open;sb.appendChild(m);const st=document.createElement('span');st.id='pfBStat';st.className='hint';sb.appendChild(st);}}
  const lb=$('#lib .box');if(lb&&!$('#pfBtn2')){const b=document.createElement('button');b.id='pfBtn2';b.className='hot';b.textContent='🖨️ Download these for Printful (transparent PNGs)';b.onclick=()=>{$('#lib').hidden=true;open();};lb.insertBefore(b,$('#libGrid'));}});
