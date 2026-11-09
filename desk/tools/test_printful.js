@@ -19,8 +19,30 @@ console.log('printful tests OK');
  assert.strictEqual(P.slug('My Teal & Brick Hoodie!'),'my-teal-brick-hoodie');
  const src=fs.readFileSync(path.join(D,'printful.js'),'utf8');assert.ok(!/api\.printful\.com\/(mockup|store|orders|files)/.test(src.replace(/GET https:\/\/api\.printful\.com\/products/,'')),'no Printful API calls');
  assert.ok(!/(token|apikey|api_key|Bearer)\s*[:=]\s*['"][A-Za-z0-9_]{8,}/i.test(src),'no secrets');
- assert.ok(/#pfModal #pfClose\{position:sticky/.test(src),'close button sticky');assert.ok(sw.includes("jimmi-desk-v34"));
+ assert.ok(/#pfModal #pfClose\{position:sticky/.test(src),'close button sticky');assert.ok(sw.includes("jimmi-desk-v35"));
  console.log('placement export tests OK');}
+
+ {const L=P.LEG,B=P.WB_BLEED;assert.ok(B>=48&&B<=96,'waistband bleed across join');
+  assert.strictEqual(typeof P.bandBBox,'function');assert.strictEqual(typeof P.foldY,'function');
+  /* Exterior band halves sit JUST BELOW the fold (Printful mockup-confirmed Nov 2026) */
+  const fr=P.bandBBox(160,300+B,'right',1,L),fl=P.bandBBox(300-B,440,'left',-1,L);
+  const br=P.bandBBox(300-B,440,'right',-1,L),bl=P.bandBBox(160,300+B,'left',1,L);
+  for(const [name,bb] of [['F-R',fr],['F-L',fl],['B-R',br],['B-L',bl]]){
+   assert.ok(((bb.minY+bb.maxY)/2)>bb.fy-1,name+' centroid should sit below fold (exterior)');
+   assert.ok(bb.minY>=0&&bb.maxY<L.H&&bb.minX>=0&&bb.maxX<=L.W,name+' bbox in printfile');
+   assert.ok(bb.maxY-bb.minY>40&&bb.maxX-bb.minX>40,name+' has area');
+   assert.ok(bb.maxY>bb.fy,name+' extends below fold');
+  }
+  /* Center bleed: overlapping editor ranges cover mid join on both halves */
+  assert.strictEqual((300+B)-(300-B),2*B);
+  assert.ok(160<=300&&300<=300+B,'front center in right half with bleed');
+  assert.ok(300-B<=300&&300<=440,'front center in left half with bleed');
+  /* Upright: editor-top of source maps to dest top (dy), toward smaller local-y magnitude below fold = closer to fold = top of exterior band when worn */
+  const a=160,b=300+B,w=(b-a)*7.5,h=50*7.5,k=Math.min(1,L.bandH/h),dw=w*k,dh=h*k,dy=12;
+  assert.ok(dy===12,'band dest starts just below fold');
+  assert.ok(dy<dy+dh,'editor-top (src y=0) is drawn at dy (toward fold) and editor-bottom at dy+dh (down the leg) — upright for exterior');
+  console.log('waistband fold/bleed tests OK');}
+
 {const Y=P.YOGA;assert.deepStrictEqual([Y.W,Y.H,Y.bands.front.W,Y.bands.front.H,Y.bands.back.W,Y.bands.back.H],[7050,6150,3000,1050,2400,900]);assert.strictEqual(P.LEG_PROFILES.length,5);
  for(const p of ['right','left']){const xs=P.xsAt(Y.safe[p],3000);assert.ok(xs[0]<Y.cx[p]&&Y.cx[p]<xs[1]);}assert.ok(/AOP_Yoga_leggings_guideline\.zip/.test(Y.tpl));console.log('yoga profile tests OK');}
 {const S=P.SHORTS;assert.deepStrictEqual([S.W,S.H,S.dpi,S.cx.right,S.cx.left],[8400,3300,150,2382,6012]);assert.strictEqual(P.LEG_PROFILES.filter(p=>p.garment==='shorts').length,1);for(const p of ['right','left']){const xs=P.xsAt(S.safe[p],2000);assert.ok(xs[0]<S.cx[p]&&S.cx[p]<xs[1]);}console.log('shorts profile tests OK');}
